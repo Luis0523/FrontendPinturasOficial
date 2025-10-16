@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PinterestLive - Dashboard</title>
+
+    <!-- Vincular Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        /* Estilos personalizados */
+        .container-fluid {
+            padding-left: 0;
+            padding-right: 0;
+        }
+
+        .dashboard-card {
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .card-body {
+            padding: 20px;
+        }
+
+        .btn-rojo {
+            background-color: #E60012;
+            color: white;
+        }
+
+        .btn-rojo:hover {
+            background-color: #c40010;
+        }
+
+        .btn-verde {
+            background-color: #2D9C4A;
+            color: white;
+        }
+
+        .btn-verde:hover {
+            background-color: #267738;
+        }
+
+        .card-header {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+
+        .bg-light-pink {
+            background-color: #f8d7da;
+        }
+
+        .bg-light-green {
+            background-color: #d4edda;
+        }
+
+        .bg-light-yellow {
+            background-color: #fff3cd;
+        }
+
+        .alert-error {
+            color: #E60012;
+        }
+
+        .alert-success {
+            color: #2D9C4A;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+        <div class="container-fluid">
+            <a class="navbar-brand text-danger" href="#">PinterestLive</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active text-danger" href="#">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-dark" href="#">Product Management</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-dark" href="#">Customer Management</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-dark" href="#">Sales Management</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-dark" href="#">Reports</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-danger" href="#">Logout</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid p-4">
+        <div class="row">
+            <!-- Overview Section -->
+            <div class="col-12 mb-4">
+                <h2 class="text-danger">Dashboard Overview</h2>
+                <div class="row">
+                    <!-- Recent Sales Card -->
+                    <div class="col-sm-3">
+                        <div class="card dashboard-card">
+                            <div class="card-header">
+                                Recent Sales
+                            </div>
+                            <div class="card-body">
+                                <h5 class="card-title">$12,500</h5>
+                                <p class="card-text text-success">+5% compared to last month</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Top Selling Products Card -->
+                    <div class="col-sm-3">
+                        <div class="card dashboard-card">
+                            <div class="card-header">
+                                Top Selling Products
+                            </div>
+                            <div class="card-body">
+                                <h5 class="card-title">Acrylic Paints</h5>
+                                <p class="card-text text-danger">-5% compared to last month</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Low Inventory Card -->
+                    <div class="col-sm-3">
+                        <div class="card dashboard-card bg-light-pink">
+                            <div class="card-header">
+                                Low Inventory
+                            </div>
+                            <div class="card-body">
+                                <h5 class="card-title">5 Items</h5>
+                                <p class="card-text text-danger">-15% compared to last month</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- New Customers Card -->
+                    <div class="col-sm-3">
+                        <div class="card dashboard-card bg-light-green">
+                            <div class="card-header">
+                                New Customers
+                            </div>
+                            <div class="card-body">
+                                <h5 class="card-title">25</h5>
+                                <p class="card-text text-success">+20% compared to last month</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sales Distribution Section -->
+            <div class="col-12 mb-4">
+                <h3 class="text-danger">Sales Distribution</h3>
+                <p class="text-muted">Sales Distribution by Product Category</p>
+                <div class="row">
+                    <div class="col-12">
+                        <div class="card dashboard-card">
+                            <div class="card-body">
+                                <!-- Gráfico de ventas por categoría -->
+                                <div class="row">
+                                    <div class="col-3">
+                                        <div class="card text-center">
+                                            <div class="card-body bg-light-pink">
+                                                <h5>Acrylic</h5>
+                                                <div class="bg-light-pink" style="height: 100px;"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-3">
+                                        <div class="card text-center">
+                                            <div class="card-body bg-light-yellow">
+                                                <h5>Oil</h5>
+                                                <div class="bg-light-yellow" style="height: 70px;"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-3">
+                                        <div class="card text-center">
+                                            <div class="card-body bg-light-green">
+                                                <h5>Watercolor</h5>
+                                                <div class="bg-light-green" style="height: 50px;"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-3">
+                                        <div class="card text-center">
+                                            <div class="card-body bg-light-pink">
+                                                <h5>Spray</h5>
+                                                <div class="bg-light-pink" style="height: 30px;"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Transactions Section -->
+            <div class="col-12 mb-4">
+                <h3 class="text-danger">Recent Transactions</h3>
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Transaction ID</th>
+                            <th>Date</th>
+                            <th>Customer</th>
+                            <th>Product</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>#12345</td>
+                            <td>2023-09-20</td>
+                            <td>Sophia Clark</td>
+                            <td>Acrylic Paint Set</td>
+                            <td>$250</td>
+                            <td><span class="badge bg-success">Completed</span></td>
+                        </tr>
+                        <tr>
+                            <td>#12346</td>
+                            <td>2023-09-21</td>
+                            <td>Liam Carter</td>
+                            <td>Oil Paints</td>
+                            <td>$300</td>
+                            <td><span class="badge bg-success">Completed</span></td>
+                        </tr>
+                        <tr>
+                            <td>#12347</td>
+                            <td>2023-09-22</td>
+                            <td>Isabella Hayes</td>
+                            <td>Watercolor Set</td>
+                            <td>$150</td>
+                            <td><span class="badge bg-success">Completed</span></td>
+                        </tr>
+                        <tr>
+                            <td>#12348</td>
+                            <td>2023-09-23</td>
+                            <td>Noah Bennett</td>
+                            <td>Spray Paint</td>
+                            <td>$100</td>
+                            <td><span class="badge bg-success">Completed</span></td>
+                        </tr>
+                        <tr>
+                            <td>#12349</td>
+                            <td>2023-09-24</td>
+                            <td>Ava Foster</td>
+                            <td>Enamel Paints</td>
+                            <td>$200</td>
+                            <td><span class="badge bg-success">Completed</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Botones de Acción -->
+            <div class="col-12">
+                <button class="btn btn-rojo">Add New Product</button>
+                <button class="btn btn-verde">View Sales Report</button>
+                <button class="btn btn-verde">View Inventory</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Vincular Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>
