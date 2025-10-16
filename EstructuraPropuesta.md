@@ -13,7 +13,7 @@ frontend/
 │   │   ├── bootstrap.bundle.min.js
 │   │   ├── jquery.min.js
 │   │   └── app.js                 # Configuración global
-│   └── img/
+│   └── img/ 
 │       ├── logo.png
 │       └── icons/
 │
