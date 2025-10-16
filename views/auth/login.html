@@ -5,11 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Iniciar Sesión - Sistema de Pinturas</title>
     
-    <!-- Bootstrap CSS -->
-    <link href="/assets/css/bootstrap.min.css" rel="stylesheet">
+      <!-- Bootstrap CSS desde CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     
-    <!-- Bootstrap Icons -->
-    <link href="/assets/css/bootstrap-icons.css" rel="stylesheet">
+    <!-- Bootstrap Icons desde CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
     
     <!-- Estilos personalizados -->
     <link href="/assets/css/style.css" rel="stylesheet">
@@ -192,20 +192,25 @@
                 <form id="loginForm" novalidate>
                     <!-- Email -->
                     <div class="form-floating">
-                        <input type="email" 
+                       
+                        <label for="email">
+                            <i class="bi bi-envelope me-2"></i>Correo Electrónico
+                        </label>
+                         <input type="email" 
                                class="form-control" 
                                id="email" 
                                name="email"
                                placeholder="correo@ejemplo.com" 
                                required
                                autocomplete="email">
-                        <label for="email">
-                            <i class="bi bi-envelope me-2"></i>Correo Electrónico
-                        </label>
                     </div>
 
                     <!-- Password -->
                     <div class="form-floating">
+                        
+                        <label for="password">
+                            <i class="bi bi-lock me-2"></i>Contraseña
+                        </label>
                         <input type="password" 
                                class="form-control" 
                                id="password" 
@@ -213,9 +218,6 @@
                                placeholder="Contraseña" 
                                required
                                autocomplete="current-password">
-                        <label for="password">
-                            <i class="bi bi-lock me-2"></i>Contraseña
-                        </label>
                     </div>
 
                     <!-- Recordarme y Olvidé contraseña -->
@@ -263,11 +265,13 @@
     <!-- jQuery -->
     <script src="/assets/js/jquery.min.js"></script>
     
+   <!-- Scripts desde CDN -->
     <!-- Bootstrap Bundle (incluye Popper) -->
-    <script src="/assets/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     
     <!-- Axios -->
-    <script src="/assets/js/axios.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios@1.6.0/dist/axios.min.js"></script>
+    
     
     <!-- Configuración API -->
     <script src="/config/api.js"></script>

@@ -41,6 +41,23 @@ async function loadLayout() {
     // Inicializar componentes después de cargar
     initializeSidebar();
     updateUserInfo();
+    applyPermissions();  // ✅ NUEVO: Aplicar permisos
+}
+
+/**
+ * Aplicar permisos al sidebar (ocultar opciones sin acceso)
+ */
+function applyPermissions() {
+    const menuItems = document.querySelectorAll('[data-permission]');
+    
+    menuItems.forEach(item => {
+        const permission = item.getAttribute('data-permission');
+        
+        // Verificar si el usuario tiene el permiso
+        if (Permissions[permission] && !Permissions[permission]()) {
+            item.style.display = 'none';  // Ocultar el item
+        }
+    });
 }
 
 /**
