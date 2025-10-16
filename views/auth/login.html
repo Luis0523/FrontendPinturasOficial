@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iniciar Sesión - Sistema de Pinturas</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="/assets/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Bootstrap Icons -->
+    <link href="/assets/css/bootstrap-icons.css" rel="stylesheet">
+    
+    <!-- Estilos personalizados -->
+    <link href="/assets/css/style.css" rel="stylesheet">
+    
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .login-container {
+            width: 100%;
+            max-width: 450px;
+            padding: 15px;
+        }
+
+        .login-card {
+            background: white;
+            border-radius: 1rem;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+        }
+
+        .login-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2.5rem 2rem 2rem;
+            text-align: center;
+        }
+
+        .login-logo {
+            width: 80px;
+            height: 80px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1rem;
+            font-size: 2.5rem;
+            color: #667eea;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .login-title {
+            font-size: 1.75rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .login-subtitle {
+            opacity: 0.9;
+            font-size: 0.95rem;
+        }
+
+        .login-body {
+            padding: 2.5rem 2rem;
+        }
+
+        .form-floating {
+            margin-bottom: 1.25rem;
+        }
+
+        .form-floating > .form-control {
+            height: 58px;
+            padding-top: 1.625rem;
+            padding-bottom: 0.625rem;
+        }
+
+        .form-floating > label {
+            padding: 1rem 0.75rem;
+        }
+
+        .form-control:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+        }
+
+        .btn-login {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: white;
+            padding: 0.875rem;
+            font-weight: 600;
+            font-size: 1rem;
+            border-radius: 0.5rem;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .btn-login:hover {
+            background: linear-gradient(135deg, #5568d3 0%, #6a3f8f 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-login:active {
+            transform: translateY(0);
+        }
+
+        .remember-me {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .form-check-input:checked {
+            background-color: #667eea;
+            border-color: #667eea;
+        }
+
+        .forgot-password {
+            color: #667eea;
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .forgot-password:hover {
+            text-decoration: underline;
+        }
+
+        .login-footer {
+            text-align: center;
+            padding: 1.5rem 2rem;
+            background-color: #f8f9fa;
+            border-top: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .login-footer p {
+            margin: 0;
+            color: #6c757d;
+            font-size: 0.875rem;
+        }
+
+        /* Animaciones */
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .login-card {
+            animation: slideIn 0.5s ease-out;
+        }
+
+        /* Loading spinner dentro del botón */
+        .btn-login .spinner-border {
+            width: 1rem;
+            height: 1rem;
+            border-width: 0.15rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-card">
+            <!-- Header -->
+            <div class="login-header">
+                <div class="login-logo">
+                    <i class="bi bi-palette-fill"></i>
+                </div>
+                <h1 class="login-title">Bienvenido</h1>
+                <p class="login-subtitle">Ingresa tus credenciales para continuar</p>
+            </div>
+
+            <!-- Body -->
+            <div class="login-body">
+                <!-- Contenedor de alertas -->
+                <div id="alert-container" class="mb-3"></div>
+
+                <!-- Formulario de Login -->
+                <form id="loginForm" novalidate>
+                    <!-- Email -->
+                    <div class="form-floating">
+                        <input type="email" 
+                               class="form-control" 
+                               id="email" 
+                               name="email"
+                               placeholder="correo@ejemplo.com" 
+                               required
+                               autocomplete="email">
+                        <label for="email">
+                            <i class="bi bi-envelope me-2"></i>Correo Electrónico
+                        </label>
+                    </div>
+
+                    <!-- Password -->
+                    <div class="form-floating">
+                        <input type="password" 
+                               class="form-control" 
+                               id="password" 
+                               name="password"
+                               placeholder="Contraseña" 
+                               required
+                               autocomplete="current-password">
+                        <label for="password">
+                            <i class="bi bi-lock me-2"></i>Contraseña
+                        </label>
+                    </div>
+
+                    <!-- Recordarme y Olvidé contraseña -->
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <div class="form-check">
+                            <input class="form-check-input" 
+                                   type="checkbox" 
+                                   id="rememberMe"
+                                   name="rememberMe">
+                            <label class="form-check-label" for="rememberMe">
+                                Recordarme
+                            </label>
+                        </div>
+                        <a href="/views/auth/recuperar-password.html" class="forgot-password">
+                            ¿Olvidaste tu contraseña?
+                        </a>
+                    </div>
+
+                    <!-- Botón Submit -->
+                    <button type="submit" class="btn btn-login w-100" id="submitButton">
+                        <i class="bi bi-box-arrow-in-right me-2"></i>
+                        Iniciar Sesión
+                    </button>
+                </form>
+            </div>
+
+            <!-- Footer -->
+            <div class="login-footer">
+                <p>
+                    <i class="bi bi-shield-check me-1"></i>
+                    Sistema Seguro - Versión 1.0.0
+                </p>
+            </div>
+        </div>
+
+        <!-- Copyright -->
+        <div class="text-center mt-4">
+            <p class="text-white mb-0">
+                <small>&copy; 2024 Sistema de Pinturas. Todos los derechos reservados.</small>
+            </p>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <!-- jQuery -->
+    <script src="/assets/js/jquery.min.js"></script>
+    
+    <!-- Bootstrap Bundle (incluye Popper) -->
+    <script src="/assets/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Axios -->
+    <script src="/assets/js/axios.min.js"></script>
+    
+    <!-- Configuración API -->
+    <script src="/config/api.js"></script>
+    
+    <!-- Utilidades -->
+    <script src="/utils/storage.js"></script>
+    <script src="/utils/formatter.js"></script>
+    <script src="/utils/validator.js"></script>
+    <script src="/utils/alerts.js"></script>
+    <script src="/utils/loader.js"></script>
+    
+    <!-- Servicios -->
+    <script src="/services/auth.service.js"></script>
+    
+    <!-- Controlador de Login -->
+    <script src="/controllers/auth.controller.js"></script>
+</body>
+</html>
