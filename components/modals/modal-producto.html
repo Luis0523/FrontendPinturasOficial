@@ -1,0 +1,210 @@
+<!-- Modal Crear/Editar Producto -->
+<div class="modal fade" id="modalProducto" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalProductoTitle">
+                    <i class="bi bi-box-seam me-2"></i>
+                    <span id="modalProductoTitleText">Nuevo Producto</span>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formProducto" novalidate>
+                    <input type="hidden" id="producto_id">
+
+                    <!-- Tabs -->
+                    <ul class="nav nav-tabs mb-3" role="tablist">
+                        <li class="nav-item">
+                            <button class="nav-link active" 
+                                    id="tab-general-btn" 
+                                    data-bs-toggle="tab" 
+                                    data-bs-target="#tab-general" 
+                                    type="button">
+                                <i class="bi bi-info-circle me-1"></i>
+                                Información General
+                            </button>
+                        </li>
+                        <li class="nav-item">
+                            <button class="nav-link" 
+                                    id="tab-presentaciones-btn" 
+                                    data-bs-toggle="tab" 
+                                    data-bs-target="#tab-presentaciones" 
+                                    type="button">
+                                <i class="bi bi-box me-1"></i>
+                                Presentaciones y Precios
+                            </button>
+                        </li>
+                    </ul>
+
+                    <!-- Tab Content -->
+                    <div class="tab-content">
+                        <!-- TAB 1: Información General -->
+                        <div class="tab-pane fade show active" id="tab-general">
+                            <div class="row g-3">
+                                <!-- SKU -->
+                                <div class="col-md-6">
+                                    <label class="form-label">
+                                        Código SKU <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="text" 
+                                           class="form-control" 
+                                           id="sku" 
+                                           name="sku"
+                                           placeholder="Ej: PINT-LAT-BL-001"
+                                           required>
+                                    <div class="invalid-feedback"></div>
+                                </div>
+
+                                <!-- Descripción -->
+                                <div class="col-md-6">
+                                    <label class="form-label">
+                                        Descripción <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="text" 
+                                           class="form-control" 
+                                           id="descripcion" 
+                                           name="descripcion"
+                                           placeholder="Ej: Pintura Látex Blanco"
+                                           required>
+                                    <div class="invalid-feedback"></div>
+                                </div>
+
+                                <!-- Categoría -->
+                                <div class="col-md-4">
+                                    <label class="form-label">
+                                        Categoría <span class="text-danger">*</span>
+                                    </label>
+                                    <select class="form-select" 
+                                            id="categoria_id" 
+                                            name="categoria_id"
+                                            required>
+                                        <option value="">Seleccionar...</option>
+                                        <!-- Se llenará dinámicamente -->
+                                    </select>
+                                    <div class="invalid-feedback"></div>
+                                </div>
+
+                                <!-- Marca -->
+                                <div class="col-md-4">
+                                    <label class="form-label">
+                                        Marca <span class="text-danger">*</span>
+                                    </label>
+                                    <select class="form-select" 
+                                            id="marca_id" 
+                                            name="marca_id"
+                                            required>
+                                        <option value="">Seleccionar...</option>
+                                        <!-- Se llenará dinámicamente -->
+                                    </select>
+                                    <div class="invalid-feedback"></div>
+                                </div>
+
+                                <!-- Estado -->
+                                <div class="col-md-4">
+                                    <label class="form-label">Estado</label>
+                                    <select class="form-select" 
+                                            id="estado" 
+                                            name="estado">
+                                        <option value="ACTIVO">Activo</option>
+                                        <option value="INACTIVO">Inactivo</option>
+                                    </select>
+                                </div>
+
+                                <!-- Color -->
+                                <div class="col-md-4">
+                                    <label class="form-label">Color</label>
+                                    <input type="text" 
+                                           class="form-control" 
+                                           id="color" 
+                                           name="color"
+                                           placeholder="Ej: Blanco">
+                                </div>
+
+                                <!-- Tamaño/Volumen -->
+                                <div class="col-md-4">
+                                    <label class="form-label">Tamaño/Volumen</label>
+                                    <input type="text" 
+                                           class="form-control" 
+                                           id="tamano" 
+                                           name="tamano"
+                                           placeholder="Ej: 1 Galón">
+                                </div>
+
+                                <!-- Duración -->
+                                <div class="col-md-4">
+                                    <label class="form-label">Duración (años)</label>
+                                    <input type="number" 
+                                           class="form-control" 
+                                           id="duracion_anios" 
+                                           name="duracion_anios"
+                                           placeholder="Ej: 5"
+                                           min="0"
+                                           step="0.1">
+                                </div>
+
+                                <!-- Extensión m² -->
+                                <div class="col-md-12">
+                                    <label class="form-label">Extensión (m² por galón)</label>
+                                    <input type="number" 
+                                           class="form-control" 
+                                           id="extension_m2" 
+                                           name="extension_m2"
+                                           placeholder="Ej: 35"
+                                           min="0"
+                                           step="0.01">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- TAB 2: Presentaciones y Precios -->
+                        <div class="tab-pane fade" id="tab-presentaciones">
+                            <div class="mb-3">
+                                <button type="button" 
+                                        class="btn btn-sm btn-outline-primary" 
+                                        onclick="ProductosController.addPresentacion()">
+                                    <i class="bi bi-plus-circle me-1"></i>
+                                    Agregar Presentación
+                                </button>
+                            </div>
+
+                            <div class="table-responsive">
+                                <table class="table table-sm">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th style="width: 30%;">Presentación</th>
+                                            <th style="width: 20%;">Precio Base</th>
+                                            <th style="width: 20%;">Precio Venta</th>
+                                            <th style="width: 20%;">Stock Mínimo</th>
+                                            <th style="width: 10%;" class="text-center">Acción</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="presentacionesTableBody">
+                                        <!-- Se llenará dinámicamente -->
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <div id="noPresentaciones" class="alert alert-info" style="display: none;">
+                                <i class="bi bi-info-circle me-2"></i>
+                                No hay presentaciones agregadas. Haz clic en "Agregar Presentación" para comenzar.
+                            </div>
+                        </div>
+                    </div>
+
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="bi bi-x-circle me-2"></i>Cancelar
+                </button>
+                <button type="button" 
+                        class="btn btn-primary" 
+                        id="btnGuardarProducto"
+                        onclick="ProductosController.saveProducto()">
+                    <i class="bi bi-check-circle me-2"></i>Guardar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

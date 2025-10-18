@@ -16,7 +16,7 @@ const AuthService = {
                 email,
                 password
             });
-            console.log(response.data);
+            console.warn(response.data);
             return response.data;
         } catch (error) {
             throw this.handleError(error);
@@ -50,6 +50,7 @@ const AuthService = {
      * Obtener usuario actual
      */
     getCurrentUser() {
+        console.log(Storage.getUser());
         return Storage.getUser();
     },
 

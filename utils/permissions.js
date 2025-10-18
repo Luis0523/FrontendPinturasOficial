@@ -57,14 +57,19 @@ const Permissions = {
     canCreateProducts() {
         return this.hasAnyRole([
             this.ROLES.ADMINISTRADOR,
-            this.ROLES.GERENTE
+            this.ROLES.GERENTE,
+            this.ROLES.BODEGUERO,
+            this.ROLES.VENDEDOR
+            
         ]);
     },
 
     canEditProducts() {
         return this.hasAnyRole([
             this.ROLES.ADMINISTRADOR,
-            this.ROLES.GERENTE
+            this.ROLES.GERENTE,
+            this.ROLES.BODEGUERO,
+            this.ROLES.VENDEDOR
         ]);
     },
 

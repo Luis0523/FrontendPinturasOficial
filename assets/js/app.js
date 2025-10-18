@@ -31,6 +31,8 @@ async function loadComponent(elementId, componentPath) {
 /**
  * Cargar layout completo (navbar + sidebar + footer)
  */
+
+
 async function loadLayout() {
     await Promise.all([
         loadComponent('navbar-container', '/components/navbar.html'),
@@ -38,6 +40,7 @@ async function loadLayout() {
         loadComponent('footer-container', '/components/footer.html')
     ]);
     
+    console.log('components/sidebar.html cargado');
     // Inicializar componentes después de cargar
     initializeSidebar();
     updateUserInfo();
@@ -65,6 +68,7 @@ function applyPermissions() {
  */
 function initializeSidebar() {
     // Toggle sidebar en móvil
+    console.log("cargando SIDEBAR");
     const sidebarToggle = document.getElementById('sidebarToggle');
     const sidebar = document.getElementById('sidebar');
     
