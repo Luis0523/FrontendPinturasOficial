@@ -1,0 +1,61 @@
+<!-- Modal Recepcionar Orden -->
+<div class="modal fade" id="modalRecepcion" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title">
+                    <i class="bi bi-box-arrow-in-down me-2"></i>
+                    Recepcionar Orden de Compra
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formRecepcion" novalidate>
+                    <input type="hidden" id="recepcion_orden_id">
+
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle me-2"></i>
+                        <strong>Orden:</strong> <span id="recepcion_numero_orden">-</span> |
+                        <strong>Proveedor:</strong> <span id="recepcion_proveedor">-</span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Observaciones de la Recepción</label>
+                        <textarea class="form-control" id="recepcion_observaciones" rows="2"></textarea>
+                    </div>
+
+                    <h6 class="mb-3">
+                        <i class="bi bi-box-seam me-2"></i>
+                        Productos a Recepcionar
+                    </h6>
+
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Producto</th>
+                                    <th>Ordenado</th>
+                                    <th>Recibido</th>
+                                    <th>Pendiente</th>
+                                    <th>Recibir Ahora</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recepcionItemsBody">
+                                <!-- Dinámico -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="bi bi-x-circle me-2"></i>Cancelar
+                </button>
+                <button type="button" class="btn btn-success" id="btnConfirmarRecepcion" onclick="ComprasController.confirmarRecepcion()">
+                    <i class="bi bi-check-circle me-2"></i>Confirmar Recepción
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
