@@ -18,6 +18,8 @@ const ProductosController = {
     modalProducto: null,
     modalDetalle: null,
     isEditMode: false,
+    sucursalSeleccionada: null,
+
 
     /**
      * Inicializar controlador
@@ -64,38 +66,44 @@ const ProductosController = {
         ]);
     },
 
-    /**
+     /**
      * Cargar datos iniciales
      */
     async loadInitialData() {
         try {
             Loader.show('Cargando datos...');
 
-            const [productosRes, presentacionesRes] = await Promise.all([
-                ProductosService.getProductos({ limit: 1000 }), // Cargar todos para extraer categorías/marcas
-                PresentacionesService.getPresentaciones()
+            const [productosRes, presentacionesRes, sucursalesRes] = await Promise.all([
+                ProductosService.getProductos({ limit: 1000 }),
+                PresentacionesService.getPresentaciones(),
+                SucursalesService.getSucursales() // NUEVO
             ]);
 
             const productos = productosRes.data || [];
             this.presentaciones = presentacionesRes.data || [];
+            this.sucursales = sucursalesRes.data || []; // NUEVO
 
-            // Extraer categorías únicas de los productos
+            // Extraer categorías únicas
             this.categorias = [...new Map(
                 productos
                     .filter(p => p.categoria)
                     .map(p => [p.categoria.id, p.categoria])
             ).values()];
 
-            // Extraer marcas únicas de los productos
+            // Extraer marcas únicas
             this.marcas = [...new Map(
                 productos
                     .filter(p => p.marca)
                     .map(p => [p.marca.id, p.marca])
             ).values()];
 
+            // Obtener sucursal del usuario logueado
+            const user = Storage.getUser();
+            this.sucursalSeleccionada = user?.sucursal_id || null;
+
             // Llenar selects
             this.fillFilterSelects();
-            this.fillFormSelects();
+            //this.fillFormSelects();
 
             Loader.hide();
         } catch (error) {
@@ -109,10 +117,20 @@ const ProductosController = {
      * Llenar selects de filtros
      */
     fillFilterSelects() {
+        // Sucursales (NUEVO)
+        const filterSucursal = document.getElementById('filterSucursal');
+        if (filterSucursal) {
+            filterSucursal.innerHTML = '<option value="">Todas las Sucursales</option>';
+            this.sucursales.forEach(suc => {
+                const selected = suc.id === this.sucursalSeleccionada ? 'selected' : '';
+                filterSucursal.innerHTML += `<option value="${suc.id}" ${selected}>${suc.nombre}</option>`;
+            });
+        }
+
         // Categorías
-        const filterCategoria = document.getElementById('filterCategoria');
+       /* const filterCategoria = document.getElementById('filterCategoria');
         if (filterCategoria) {
-            filterCategoria.innerHTML = '<option value="">Todas las Categorías</option>';
+            filterCategoria.innerHTML = '<option value="">Todas</option>';
             this.categorias.forEach(cat => {
                 filterCategoria.innerHTML += `<option value="${cat.id}">${cat.nombre}</option>`;
             });
@@ -121,34 +139,11 @@ const ProductosController = {
         // Marcas
         const filterMarca = document.getElementById('filterMarca');
         if (filterMarca) {
-            filterMarca.innerHTML = '<option value="">Todas las Marcas</option>';
+            filterMarca.innerHTML = '<option value="">Todas</option>';
             this.marcas.forEach(marca => {
                 filterMarca.innerHTML += `<option value="${marca.id}">${marca.nombre}</option>`;
             });
-        }
-    },
-
-    /**
-     * Llenar selects del formulario
-     */
-    fillFormSelects() {
-        // Categorías en el formulario
-        const categoriaSelect = document.getElementById('categoria_id');
-        if (categoriaSelect) {
-            categoriaSelect.innerHTML = '<option value="">Seleccionar...</option>';
-            this.categorias.forEach(cat => {
-                categoriaSelect.innerHTML += `<option value="${cat.id}">${cat.nombre}</option>`;
-            });
-        }
-
-        // Marcas en el formulario
-        const marcaSelect = document.getElementById('marca_id');
-        if (marcaSelect) {
-            marcaSelect.innerHTML = '<option value="">Seleccionar...</option>';
-            this.marcas.forEach(marca => {
-                marcaSelect.innerHTML += `<option value="${marca.id}">${marca.nombre}</option>`;
-            });
-        }
+        }*/
     },
 
     /**
@@ -165,7 +160,7 @@ const ProductosController = {
         }
 
         // Filtros
-        ['filterCategoria', 'filterMarca', 'filterEstado'].forEach(filterId => {
+        ['filterSucursal', 'filterCategoria', 'filterMarca', 'filterEstado'].forEach(filterId => {
             const filterElement = document.getElementById(filterId);
             if (filterElement) {
                 filterElement.addEventListener('change', () => {
@@ -175,13 +170,7 @@ const ProductosController = {
             }
         });
 
-        // Limpiar formulario al cerrar modal
-        const modalElement = document.getElementById('modalProducto');
-        if (modalElement) {
-            modalElement.addEventListener('hidden.bs.modal', () => {
-                this.resetForm();
-            });
-        }
+        // ... resto del código ...
     },
 
     /**
@@ -193,6 +182,7 @@ const ProductosController = {
 
             const filtros = {
                 buscar: document.getElementById('searchInput')?.value || '',
+                sucursal_id: document.getElementById('filterSucursal')?.value || '', // NUEVO
                 categoria_id: document.getElementById('filterCategoria')?.value || '',
                 marca_id: document.getElementById('filterMarca')?.value || '',
                 activo: document.getElementById('filterEstado')?.value || '',
@@ -230,8 +220,8 @@ const ProductosController = {
                 <tr>
                     <td colspan="9" class="text-center py-5">
                         <div class="empty-state">
-                            <i class="bi bi-inbox"></i>
-                            <h4>No hay productos</h4>
+                            <i class="bi bi-inbox display-1 text-muted"></i>
+                            <h4 class="mt-3">No hay productos</h4>
                             <p class="text-muted">No se encontraron productos con los filtros aplicados</p>
                             ${Permissions.canCreateProducts() ? 
                                 '<button class="btn btn-primary" onclick="ProductosController.openCreateModal()">Crear Primer Producto</button>' 
@@ -244,6 +234,9 @@ const ProductosController = {
         }
 
         tbody.innerHTML = this.productos.map(producto => {
+            // Calcular stock total o por sucursal
+            const stockInfo = this.getStockInfo(producto);
+            
             return `
                 <tr>
                     <td>
@@ -262,12 +255,12 @@ const ProductosController = {
                     <td>${producto.categoria?.nombre || '-'}</td>
                     <td>${producto.marca?.nombre || '-'}</td>
                     <td>
-                        <span class="badge bg-info" title="Ver presentaciones">
+                        <span class="badge bg-info" title="Presentaciones disponibles">
                             <i class="bi bi-box"></i> ${producto.tamano || 'Variable'}
                         </span>
                     </td>
-                    <td>
-                        <span class="badge bg-secondary">-</span>
+                    <td class="text-center">
+                        ${stockInfo}
                     </td>
                     <td>
                         <span class="badge ${producto.activo ? 'bg-success' : 'bg-secondary'}">
@@ -312,6 +305,159 @@ const ProductosController = {
         document.getElementById('showingEnd').textContent = end;
         document.getElementById('totalRecords').textContent = this.totalRecords;
     },
+
+    /**
+     * Obtener información de stock (NUEVO)
+     */
+    getStockInfo(producto) {
+        // Si hay inventario en el producto
+        if (producto.inventario && Array.isArray(producto.inventario) && producto.inventario.length > 0) {
+            const sucursalId = document.getElementById('filterSucursal')?.value;
+            
+            if (sucursalId) {
+                // Mostrar stock de la sucursal seleccionada
+                const inv = producto.inventario.find(i => i.sucursal_id == sucursalId);
+                if (inv) {
+                    return this.getStockBadge(inv.existencia, inv.stock_minimo);
+                }
+                return '<span class="badge bg-secondary">Sin stock</span>';
+            } else {
+                // Mostrar stock total de todas las sucursales
+                const totalStock = producto.inventario.reduce((sum, inv) => sum + (inv.existencia || 0), 0);
+                return `<span class="badge bg-info">${totalStock} unidades</span>`;
+            }
+        }
+        
+        return '<span class="badge bg-secondary">-</span>';
+    },
+
+    /**
+     * Obtener badge de stock con colores según nivel (NUEVO)
+     */
+    getStockBadge(existencia, stockMinimo) {
+        const stock = existencia || 0;
+        const minimo = stockMinimo || 0;
+        
+        if (stock === 0) {
+            return '<span class="badge bg-danger"><i class="bi bi-exclamation-triangle"></i> Sin stock</span>';
+        } else if (stock < minimo * 0.5) {
+            return `<span class="badge bg-danger"><i class="bi bi-exclamation-circle"></i> ${stock} (Crítico)</span>`;
+        } else if (stock < minimo) {
+            return `<span class="badge bg-warning text-dark"><i class="bi bi-exclamation-triangle"></i> ${stock} (Bajo)</span>`;
+        } else {
+            return `<span class="badge bg-success">${stock} unidades</span>`;
+        }
+    },
+
+    /**
+     * Ver detalle del producto (MODIFICADO)
+     */
+    async viewDetalle(id) {
+        try {
+            Loader.show('Cargando detalle...');
+
+            // Obtener producto con inventario
+            const response = await ProductosService.getProductoById(id);
+            const producto = response.data;
+
+            // Obtener inventario por sucursal
+            const inventarioRes = await ProductosService.getInventarioProducto(id);
+            const inventario = inventarioRes.data || [];
+
+            // Obtener presentaciones
+            const presentacionesRes = await ProductosService.getPresentacionesDeProducto(id);
+            const presentaciones = presentacionesRes.data || [];
+
+            // Llenar modal de detalle
+            document.getElementById('detalle_sku').textContent = producto.codigo_sku || '-';
+            document.getElementById('detalle_descripcion').textContent = producto.descripcion || '-';
+            document.getElementById('detalle_categoria').textContent = producto.categoria?.nombre || '-';
+            document.getElementById('detalle_marca').textContent = producto.marca?.nombre || '-';
+            document.getElementById('detalle_color').textContent = producto.color || '-';
+            document.getElementById('detalle_estado').innerHTML = `
+                <span class="badge ${producto.activo ? 'bg-success' : 'bg-secondary'}">
+                    ${producto.activo ? 'ACTIVO' : 'INACTIVO'}
+                </span>
+            `;
+            document.getElementById('detalle_duracion').textContent = producto.duracion_anios ? `${producto.duracion_anios} años` : '-';
+            document.getElementById('detalle_extension').textContent = producto.extension_m2 ? `${producto.extension_m2} m²` : '-';
+
+            // Renderizar presentaciones
+            const tbodyPresentaciones = document.getElementById('detalle_presentaciones');
+            if (tbodyPresentaciones) {
+                if (presentaciones.length === 0) {
+                    tbodyPresentaciones.innerHTML = `
+                        <tr>
+                            <td colspan="4" class="text-center text-muted py-3">
+                                <i class="bi bi-inbox"></i> No hay presentaciones agregadas
+                            </td>
+                        </tr>
+                    `;
+                } else {
+                    tbodyPresentaciones.innerHTML = presentaciones.map(p => `
+                        <tr>
+                            <td>${p.presentacion?.nombre || p.Presentacion?.nombre || '-'}</td>
+                            <td class="text-center">-</td>
+                            <td class="text-center">-</td>
+                            <td class="text-center">-</td>
+                        </tr>
+                    `).join('');
+                }
+            }
+
+            // Renderizar inventario por sucursal (NUEVO)
+            const tbodyInventario = document.getElementById('detalle_inventario');
+            if (tbodyInventario) {
+                if (inventario.length === 0) {
+                    tbodyInventario.innerHTML = `
+                        <tr>
+                            <td colspan="6" class="text-center text-muted py-3">
+                                <i class="bi bi-inbox"></i> No hay información de inventario disponible
+                            </td>
+                        </tr>
+                    `;
+                } else {
+                    tbodyInventario.innerHTML = inventario.map(inv => `
+                        <tr>
+                            <td>
+                                <i class="bi bi-building"></i>
+                                <strong>${inv.sucursal?.nombre || '-'}</strong>
+                            </td>
+                            <td>${inv.presentacion?.nombre || '-'}</td>
+                            <td class="text-center">
+                                ${this.getStockBadge(inv.existencia, inv.stock_minimo)}
+                            </td>
+                            <td class="text-center">
+                                <span class="badge bg-secondary">${inv.stock_minimo || 0}</span>
+                            </td>
+                            <td class="text-center">
+                                <span class="badge bg-secondary">${inv.stock_maximo || 0}</span>
+                            </td>
+                            <td class="text-center">
+                                <span class="text-muted small">
+                                    ${inv.ultima_actualizacion ? Formatter.formatDate(inv.ultima_actualizacion) : '-'}
+                                </span>
+                            </td>
+                        </tr>
+                    `).join('');
+                }
+            }
+
+            // Guardar ID para el botón de editar
+            this.currentProductoId = id;
+
+            Loader.hide();
+
+            // Mostrar modal
+            this.modalDetalle.show();
+
+        } catch (error) {
+            Loader.hide();
+            console.error('Error cargando detalle:', error);
+            Alerts.error('Error al cargar el detalle del producto');
+        }
+    },
+    
 
     /**
      * Renderizar paginación

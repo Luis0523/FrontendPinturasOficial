@@ -162,7 +162,7 @@
                             <div class="mb-3">
                                 <button type="button" 
                                         class="btn btn-sm btn-outline-primary" 
-                                        onclick="ProductosController.addPresentacion()">
+                                        onclick="CatalogoController.addPresentacion()">
                                     <i class="bi bi-plus-circle me-1"></i>
                                     Agregar Presentación
                                 </button>
@@ -173,10 +173,10 @@
                                     <thead class="table-light">
                                         <tr>
                                             <th style="width: 30%;">Presentación</th>
-                                            <th style="width: 20%;">Precio Base</th>
+                                         <!--  <th style="width: 20%;">Precio Base</th>-->
                                             <th style="width: 20%;">Precio Venta</th>
                                             <th style="width: 20%;">Stock Mínimo</th>
-                                            <th style="width: 10%;" class="text-center">Acción</th>
+                                           <!-- <th style="width: 10%;" class="text-center">Acción</th>-->
                                         </tr>
                                     </thead>
                                     <tbody id="presentacionesTableBody">
@@ -201,7 +201,7 @@
                 <button type="button" 
                         class="btn btn-primary" 
                         id="btnGuardarProducto"
-                        onclick="ProductosController.saveProducto()">
+                        onclick="CatalogoController.saveProducto()">
                     <i class="bi bi-check-circle me-2"></i>Guardar
                 </button>
             </div>

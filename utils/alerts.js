@@ -120,7 +120,7 @@ const Alerts = {
 
         const modalElement = document.getElementById(modalId);
         const modal = new bootstrap.Modal(modalElement);
-        
+
         // Manejar confirmación
         document.getElementById(`${modalId}-confirm`).addEventListener('click', () => {
             modal.hide();
@@ -162,5 +162,36 @@ const Alerts = {
         if (container) {
             container.innerHTML = '';
         }
+    },
+    /**
+ * Mostrar alerta con select
+ */
+    select(text, title, options, callback) {
+        const opciones = {};
+        options.forEach(opt => {
+            opciones[opt.value] = opt.text;
+        });
+
+        Swal.fire({
+            title: title,
+            text: text,
+            input: 'select',
+            inputOptions: opciones,
+            inputPlaceholder: 'Selecciona una opción',
+            showCancelButton: true,
+            confirmButtonText: 'Aceptar',
+            cancelButtonText: 'Cancelar',
+            confirmButtonColor: '#0d6efd',
+            cancelButtonColor: '#6c757d',
+            inputValidator: (value) => {
+                if (!value) {
+                    return 'Debes seleccionar una opción';
+                }
+            }
+        }).then((result) => {
+            if (result.isConfirmed && result.value) {
+                callback(result.value);
+            }
+        });
     }
 };

@@ -4,7 +4,7 @@
 
 const ProductosService = {
     /**
-     * Obtener todos los productos (incluye categoría y marca)
+     * Obtener todos los productos
      */
     async getProductos(filtros = {}) {
         try {
@@ -13,7 +13,7 @@ const ProductosService = {
             if (filtros.buscar) params.append('buscar', filtros.buscar);
             if (filtros.categoria_id) params.append('categoria_id', filtros.categoria_id);
             if (filtros.marca_id) params.append('marca_id', filtros.marca_id);
-            if (filtros.activo !== undefined) params.append('activo', filtros.activo);
+            if (filtros.activo !== undefined && filtros.activo !== '') params.append('activo', filtros.activo);
             if (filtros.page) params.append('page', filtros.page);
             if (filtros.limit) params.append('limit', filtros.limit);
 
@@ -37,7 +37,7 @@ const ProductosService = {
     },
 
     /**
-     * Crear producto (solo info base)
+     * Crear producto
      */
     async createProducto(data) {
         try {
@@ -85,7 +85,7 @@ const ProductosService = {
     },
 
     /**
-     * Agregar presentaciones a un producto (solo IDs)
+     * Agregar presentaciones a un producto
      */
     async agregarPresentacionesAProducto(productoId, presentacionesIds) {
         try {
@@ -99,7 +99,7 @@ const ProductosService = {
     },
 
     /**
-     * Desactivar una presentación del producto
+     * Desactivar presentación del producto
      */
     async desactivarProductoPresentacion(productoPresentacionId) {
         try {
@@ -111,7 +111,7 @@ const ProductosService = {
     },
 
     /**
-     * Reactivar una presentación del producto
+     * Reactivar presentación del producto
      */
     async reactivarProductoPresentacion(productoPresentacionId) {
         try {

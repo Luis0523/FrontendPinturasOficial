@@ -22,7 +22,9 @@ const Formatter = {
         if (number === null || number === undefined) return '0';
         return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
     },
-
+    formatCurrency(amount) {
+        return this.currency(amount);
+    },
     /**
      * Formatear fecha
      * @param {string} dateString - Fecha en formato ISO
@@ -31,20 +33,20 @@ const Formatter = {
      */
     date(dateString, includeTime = false) {
         if (!dateString) return '';
-        
+
         const date = new Date(dateString);
         const day = String(date.getDate()).padStart(2, '0');
         const month = String(date.getMonth() + 1).padStart(2, '0');
         const year = date.getFullYear();
-        
+
         let formatted = `${day}/${month}/${year}`;
-        
+
         if (includeTime) {
             const hours = String(date.getHours()).padStart(2, '0');
             const minutes = String(date.getMinutes()).padStart(2, '0');
             formatted += ` ${hours}:${minutes}`;
         }
-        
+
         return formatted;
     },
 
@@ -55,19 +57,19 @@ const Formatter = {
      */
     dateRelative(dateString) {
         if (!dateString) return '';
-        
+
         const date = new Date(dateString);
         const now = new Date();
         const diffMs = now - date;
         const diffMins = Math.floor(diffMs / 60000);
         const diffHours = Math.floor(diffMs / 3600000);
         const diffDays = Math.floor(diffMs / 86400000);
-        
+
         if (diffMins < 1) return 'Justo ahora';
         if (diffMins < 60) return `Hace ${diffMins} min`;
         if (diffHours < 24) return `Hace ${diffHours} horas`;
         if (diffDays < 7) return `Hace ${diffDays} días`;
-        
+
         return this.date(dateString);
     },
 

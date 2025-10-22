@@ -1,0 +1,79 @@
+<!-- Modal Crear/Editar Precio -->
+<div class="modal fade" id="modalPrecio" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalPrecioTitle">Crear Precio</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formPrecio">
+                    <input type="hidden" id="precio_id">
+                    <input type="hidden" id="precio_producto_presentacion_id">
+                    <input type="hidden" id="precio_sucursal_id">
+
+                    <div class="mb-3">
+                        <label for="precio_compra" class="form-label">
+                            Precio de Compra (Q)
+                        </label>
+                        <input type="number" 
+                               class="form-control" 
+                               id="precio_compra" 
+                               step="0.01" 
+                               min="0"
+                               placeholder="100.00">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="precio_venta" class="form-label">
+                            Precio de Venta (Q) <span class="text-danger">*</span>
+                        </label>
+                        <input type="number" 
+                               class="form-control" 
+                               id="precio_venta" 
+                               step="0.01" 
+                               min="0"
+                               placeholder="150.00"
+                               required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="precio_descuento" class="form-label">
+                            Descuento (%)
+                        </label>
+                        <input type="number" 
+                               class="form-control" 
+                               id="precio_descuento" 
+                               step="0.01" 
+                               min="0"
+                               max="100"
+                               value="0">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="precio_stock_minimo" class="form-label">
+                            Stock Mínimo
+                        </label>
+                        <input type="number" 
+                               class="form-control" 
+                               id="precio_stock_minimo" 
+                               step="1" 
+                               min="0"
+                               value="0">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    Cancelar
+                </button>
+                <button type="button" 
+                        class="btn btn-primary" 
+                        id="btnGuardarPrecio"
+                        onclick="CatalogoController.guardarPrecio()">
+                    Guardar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
