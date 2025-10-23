@@ -1,0 +1,290 @@
+<!-- Modal Factura Exitosa - POS -->
+<div class="modal fade" id="modalFacturaExitosa" tabindex="-1" aria-labelledby="modalFacturaExitosaLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      
+      <!-- Header -->
+      <div class="modal-header bg-success text-white">
+        <h5 class="modal-title" id="modalFacturaExitosaLabel">
+          <i class="bi bi-check-circle-fill"></i> ¡Venta Realizada!
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      
+      <!-- Body -->
+      <div class="modal-body text-center py-4">
+        
+        <!-- Ícono grande de éxito -->
+        <div class="success-icon mb-4">
+          <i class="bi bi-check-circle-fill text-success"></i>
+        </div>
+        
+        <!-- Información de la factura -->
+        <div class="factura-info mb-4">
+          <h4 class="mb-1">Factura <span id="facturaNumeroCompleto" class="text-primary">#---</span></h4>
+          <p class="text-muted mb-0">
+            Serie: <strong id="facturaSerie">A</strong>
+          </p>
+          <p class="text-muted small">
+            <i class="bi bi-calendar3"></i> 
+            <span id="facturaFecha">--/--/----</span>
+            <i class="bi bi-clock ms-2"></i>
+            <span id="facturaHora">--:--</span>
+          </p>
+        </div>
+        
+        <!-- Cliente -->
+        <div class="cliente-info mb-4">
+          <p class="mb-1 text-muted small">Cliente:</p>
+          <h6 class="mb-0" id="facturaCliente">---</h6>
+          <small class="text-muted">NIT: <span id="facturaClienteNit">---</span></small>
+        </div>
+        
+        <!-- Total destacado -->
+        <div class="alert alert-success py-3 mb-4">
+          <h3 class="mb-0">
+            <i class="bi bi-cash-coin"></i> 
+            Q<span id="facturaTotal">0.00</span>
+          </h3>
+          <small class="text-muted">Total de la venta</small>
+        </div>
+        
+        <!-- Detalles resumidos -->
+        <div class="detalles-resumen mb-4">
+          <div class="row g-2 text-start">
+            <div class="col-6">
+              <small class="text-muted">Items vendidos:</small>
+              <p class="mb-0 fw-bold" id="facturaItemsCount">0</p>
+            </div>
+            <div class="col-6">
+              <small class="text-muted">Método de pago:</small>
+              <p class="mb-0 fw-bold" id="facturaMetodoPago">---</p>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Acciones principales -->
+        <div class="d-grid gap-2 mb-3">
+          <button 
+            type="button" 
+            class="btn btn-outline-primary" 
+            id="btnVerDetalleFactura"
+          >
+            <i class="bi bi-file-text"></i> Ver Detalle Completo
+          </button>
+          
+          <button 
+            type="button" 
+            class="btn btn-outline-secondary" 
+            id="btnImprimirFactura"
+          >
+            <i class="bi bi-printer"></i> Imprimir Factura
+          </button>
+          
+          <button 
+            type="button" 
+            class="btn btn-outline-info" 
+            id="btnEnviarEmailFactura"
+            style="display: none;"
+          >
+            <i class="bi bi-envelope"></i> Enviar por Email
+          </button>
+        </div>
+        
+        <!-- Nota informativa -->
+        <div class="alert alert-light border" role="alert">
+          <small>
+            <i class="bi bi-info-circle text-info"></i>
+            La factura ha sido guardada correctamente. El inventario se actualizó automáticamente.
+          </small>
+        </div>
+        
+      </div>
+      
+      <!-- Footer -->
+      <div class="modal-footer justify-content-center border-0">
+        <button 
+          type="button" 
+          class="btn btn-success btn-lg px-5" 
+          data-bs-dismiss="modal"
+          id="btnNuevaVenta"
+        >
+          <i class="bi bi-plus-circle"></i> Nueva Venta
+        </button>
+      </div>
+      
+    </div>
+  </div>
+</div>
+
+<!-- Estilos adicionales para el modal -->
+<style>
+  /* Header */
+  #modalFacturaExitosa .modal-header {
+    border-bottom: none;
+    padding: 1.5rem;
+  }
+  
+  /* Ícono de éxito grande */
+  #modalFacturaExitosa .success-icon i {
+    font-size: 5rem;
+    animation: successPulse 0.6s ease-out;
+  }
+  
+  @keyframes successPulse {
+    0% {
+      transform: scale(0);
+      opacity: 0;
+    }
+    50% {
+      transform: scale(1.1);
+    }
+    100% {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
+  
+  /* Información de factura */
+  #modalFacturaExitosa .factura-info h4 {
+    font-weight: 600;
+  }
+  
+  #modalFacturaExitosa .factura-info #facturaNumeroCompleto {
+    font-family: 'Courier New', monospace;
+    letter-spacing: 1px;
+  }
+  
+  /* Alert de total */
+  #modalFacturaExitosa .alert-success {
+    background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+    border: 2px solid #28a745;
+    border-radius: 10px;
+  }
+  
+  #modalFacturaExitosa .alert-success h3 {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #155724;
+  }
+  
+  /* Detalles resumidos */
+  #modalFacturaExitosa .detalles-resumen {
+    background-color: #f8f9fa;
+    padding: 1rem;
+    border-radius: 8px;
+  }
+  
+  #modalFacturaExitosa .detalles-resumen .fw-bold {
+    font-size: 1.1rem;
+    color: #495057;
+  }
+  
+  /* Botones */
+  #modalFacturaExitosa .btn {
+    font-weight: 500;
+    transition: all 0.3s ease;
+  }
+  
+  #modalFacturaExitosa .btn-outline-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(13, 110, 253, 0.3);
+  }
+  
+  #modalFacturaExitosa .btn-outline-secondary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(108, 117, 125, 0.3);
+  }
+  
+  #modalFacturaExitosa .btn-outline-info:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(13, 202, 240, 0.3);
+  }
+  
+  #modalFacturaExitosa .btn-success {
+    font-size: 1.1rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+  }
+  
+  #modalFacturaExitosa .btn-success:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 12px rgba(40, 167, 69, 0.4);
+  }
+  
+  /* Alert informativo */
+  #modalFacturaExitosa .alert-light {
+    background-color: #fefefe;
+    font-size: 0.875rem;
+  }
+  
+  /* Cliente info */
+  #modalFacturaExitosa .cliente-info {
+    background-color: #f8f9fa;
+    padding: 1rem;
+    border-radius: 8px;
+    border-left: 4px solid #0d6efd;
+  }
+  
+  /* Modal body padding */
+  #modalFacturaExitosa .modal-body {
+    padding: 2rem 2rem 1rem 2rem;
+  }
+  
+  /* Responsive */
+  @media (max-width: 576px) {
+    #modalFacturaExitosa .success-icon i {
+      font-size: 4rem;
+    }
+    
+    #modalFacturaExitosa .alert-success h3 {
+      font-size: 1.5rem;
+    }
+    
+    #modalFacturaExitosa .modal-body {
+      padding: 1.5rem 1rem;
+    }
+  }
+  
+  /* Animación de entrada del modal */
+  #modalFacturaExitosa.show .modal-dialog {
+    animation: modalSlideDown 0.4s ease-out;
+  }
+  
+  @keyframes modalSlideDown {
+    from {
+      transform: translateY(-50px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+  
+  /* Estado de carga en botones */
+  #modalFacturaExitosa .btn.loading {
+    position: relative;
+    pointer-events: none;
+    opacity: 0.6;
+  }
+  
+  #modalFacturaExitosa .btn.loading::after {
+    content: "";
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    top: 50%;
+    left: 50%;
+    margin-left: -8px;
+    margin-top: -8px;
+    border: 2px solid currentColor;
+    border-radius: 50%;
+    border-top-color: transparent;
+    animation: spinner 0.6s linear infinite;
+  }
+  
+  @keyframes spinner {
+    to { transform: rotate(360deg); }
+  }
+</style>

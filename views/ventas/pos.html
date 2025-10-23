@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Punto de Venta - Sistema de Pinturas</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="../../assets/css/dashboard.css">
+    <link rel="stylesheet" href="../../assets/css/style.css">
+</head>
+<body>
+    
+    <!-- Incluir Navbar -->
+    <div id="navbar-container"></div>
+    
+    <div class="container-fluid">
+        <div class="row">
+            
+            <!-- Incluir Sidebar -->
+            <div id="sidebar-container"></div>
+            
+            <!-- Main Content -->
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+                
+                <!-- Header del POS -->
+                <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                    <h1 class="h2">
+                        <i class="bi bi-cart-check-fill text-primary"></i> 
+                        Punto de Venta
+                    </h1>
+                    <div class="btn-toolbar mb-2 mb-md-0">
+                        <div class="me-2">
+                            <span class="badge bg-info text-dark">
+                                <i class="bi bi-person-circle"></i> 
+                                <span id="usuarioNombre">Usuario</span>
+                            </span>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" id="btnLimpiarTodo">
+                            <i class="bi bi-arrow-clockwise"></i> Limpiar Todo
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Selector de Sucursal -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="card border-primary">
+                            <div class="card-body">
+                                <label for="selectSucursal" class="form-label fw-bold">
+                                    <i class="bi bi-geo-alt-fill text-primary"></i> 
+                                    Seleccionar Sucursal *
+                                </label>
+                                <select class="form-select form-select-lg" id="selectSucursal" required>
+                                    <option value="" selected disabled>-- Seleccione una sucursal --</option>
+                                    <!-- Se llenará dinámicamente con JavaScript -->
+                                </select>
+                                <small class="text-muted">
+                                    <i class="bi bi-info-circle"></i> 
+                                    Selecciona la sucursal para cargar el inventario disponible
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <h6 class="card-title">
+                                    <i class="bi bi-info-circle-fill text-info"></i> Información
+                                </h6>
+                                <p class="card-text small mb-0">
+                                    Serie de factura: <strong class="text-primary">A</strong>
+                                </p>
+                                <p class="card-text small mb-0">
+                                    Fecha: <strong id="fechaActual">--/--/----</strong>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Layout Principal: 2 Columnas -->
+                <div class="row" id="posMainContent" style="display: none;">
+                    
+                    <!-- COLUMNA IZQUIERDA: Catálogo de Productos -->
+                    <div class="col-lg-8 mb-4">
+                        <div class="card shadow-sm">
+                            <div class="card-header bg-white">
+                                <h5 class="mb-0">
+                                    <i class="bi bi-box-seam"></i> Catálogo de Productos
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                
+                                <!-- Buscador y Filtros -->
+                                <div class="row mb-3">
+                                    <div class="col-md-12">
+                                        <div class="input-group">
+                                            <span class="input-group-text">
+                                                <i class="bi bi-search"></i>
+                                            </span>
+                                            <input 
+                                                type="text" 
+                                                class="form-control" 
+                                                id="inputBuscarProducto"
+                                                placeholder="Buscar por código, descripción o color..."
+                                                autocomplete="off"
+                                            >
+                                            <button class="btn btn-outline-secondary" type="button" id="btnLimpiarBusqueda">
+                                                <i class="bi bi-x-circle"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Estadísticas del inventario -->
+                                <div class="row mb-3">
+                                    <div class="col">
+                                        <div class="alert alert-info py-2 mb-0" role="alert">
+                                            <small>
+                                                <i class="bi bi-box-seam"></i> 
+                                                Productos disponibles: <strong id="statsProductosDisponibles">0</strong> | 
+                                                <i class="bi bi-exclamation-triangle"></i>
+                                                Stock bajo: <strong id="statsStockBajo">0</strong> |
+                                                <i class="bi bi-x-circle"></i>
+                                                Agotados: <strong id="statsAgotados">0</strong>
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Grid de Productos -->
+                                <div id="productosGrid" class="row g-3">
+                                    <!-- Se llenará dinámicamente con JavaScript -->
+                                    <!-- Mensaje inicial -->
+                                    <div class="col-12 text-center py-5" id="mensajeInicialProductos">
+                                        <i class="bi bi-box text-muted" style="font-size: 4rem;"></i>
+                                        <p class="text-muted mt-3">Selecciona una sucursal para ver los productos disponibles</p>
+                                    </div>
+                                </div>
+                                
+                                <!-- Loader -->
+                                <div id="productosLoader" class="text-center py-5" style="display: none;">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">Cargando...</span>
+                                    </div>
+                                    <p class="text-muted mt-2">Cargando productos...</p>
+                                </div>
+                                
+                                <!-- Paginación -->
+                                <div class="d-flex justify-content-between align-items-center mt-4" id="paginacionContainer" style="display: none !important;">
+                                    <div>
+                                        <small class="text-muted">
+                                            Mostrando <strong id="paginaInicio">1</strong> - <strong id="paginaFin">12</strong> 
+                                            de <strong id="totalProductos">0</strong> productos
+                                        </small>
+                                    </div>
+                                    <nav aria-label="Paginación de productos">
+                                        <ul class="pagination pagination-sm mb-0" id="paginacion">
+                                            <!-- Se llenará dinámicamente -->
+                                        </ul>
+                                    </nav>
+                                </div>
+                                
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- COLUMNA DERECHA: Carrito y Facturación -->
+                    <div class="col-lg-4">
+                        <div class="card shadow-sm sticky-top" style="top: 20px;">
+                            <div class="card-header bg-primary text-white">
+                                <h5 class="mb-0">
+                                    <i class="bi bi-cart3"></i> Carrito de Venta
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                
+                                <!-- Sección de Cliente -->
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">
+                                        <i class="bi bi-person-fill"></i> Cliente
+                                    </label>
+                                    <div class="input-group mb-2">
+                                        <input 
+                                            type="text" 
+                                            class="form-control" 
+                                            id="inputBuscarCliente"
+                                            placeholder="Buscar por NIT o nombre..."
+                                            autocomplete="off"
+                                        >
+                                        <button class="btn btn-primary" type="button" id="btnNuevoCliente">
+                                            <i class="bi bi-plus-circle"></i> Nuevo
+                                        </button>
+                                    </div>
+                                    
+                                    <!-- Dropdown de resultados de búsqueda de clientes -->
+                                    <div class="list-group" id="dropdownClientesBusqueda" style="display: none; max-height: 200px; overflow-y: auto;">
+                                        <!-- Se llenará dinámicamente -->
+                                    </div>
+                                    
+                                    <!-- Cliente Seleccionado -->
+                                    <div class="alert alert-light border py-2 mb-0" id="clienteSeleccionado">
+                                        <small>
+                                            <i class="bi bi-check-circle text-success"></i>
+                                            <strong id="clienteNombre">CONSUMIDOR FINAL</strong><br>
+                                            NIT: <span id="clienteNit">CF</span>
+                                        </small>
+                                    </div>
+                                </div>
+                                
+                                <hr>
+                                
+                                <!-- Productos en el Carrito -->
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold">
+                                        <i class="bi bi-bag-check-fill"></i> Productos
+                                        <span class="badge bg-secondary" id="carritoCount">0</span>
+                                    </label>
+                                    
+                                    <div id="carritoItems" style="max-height: 300px; overflow-y: auto;">
+                                        <!-- Se llenará dinámicamente con JavaScript -->
+                                        
+                                        <!-- Mensaje cuando está vacío -->
+                                        <div class="text-center py-4 text-muted" id="carritoVacio">
+                                            <i class="bi bi-cart-x" style="font-size: 2rem;"></i>
+                                            <p class="mt-2 mb-0 small">Carrito vacío</p>
+                                            <small>Agrega productos desde el catálogo</small>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Botón Limpiar Carrito -->
+                                    <button 
+                                        type="button" 
+                                        class="btn btn-sm btn-outline-danger w-100 mt-2" 
+                                        id="btnLimpiarCarrito"
+                                        style="display: none;"
+                                    >
+                                        <i class="bi bi-trash"></i> Limpiar Carrito
+                                    </button>
+                                </div>
+                                
+                                <hr>
+                                
+                                <!-- Resumen de Totales -->
+                                <div class="mb-3">
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span>Subtotal:</span>
+                                        <strong>Q<span id="subtotal">0.00</span></strong>
+                                    </div>
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span>Descuento:</span>
+                                        <strong class="text-danger">-Q<span id="descuento">0.00</span></strong>
+                                    </div>
+                                    <hr>
+                                    <div class="d-flex justify-content-between">
+                                        <h5>TOTAL:</h5>
+                                        <h5 class="text-primary">Q<span id="total">0.00</span></h5>
+                                    </div>
+                                </div>
+                                
+                                <hr>
+                                
+                                <!-- Método de Pago -->
+                                <div class="mb-3">
+                                    <label for="selectMetodoPago" class="form-label fw-bold">
+                                        <i class="bi bi-credit-card-fill"></i> Método de Pago
+                                    </label>
+                                    <select class="form-select" id="selectMetodoPago">
+                                        <option value="EFECTIVO" selected>💵 Efectivo</option>
+                                        <option value="TARJETA">💳 Tarjeta</option>
+                                        <option value="TRANSFERENCIA">🏦 Transferencia</option>
+                                    </select>
+                                </div>
+                                
+                                <!-- Monto Recibido (solo para efectivo) -->
+                                <div class="mb-3" id="montoRecibidoContainer" style="display: none;">
+                                    <label for="inputMontoRecibido" class="form-label">
+                                        Monto Recibido
+                                    </label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">Q</span>
+                                        <input 
+                                            type="number" 
+                                            class="form-control" 
+                                            id="inputMontoRecibido"
+                                            placeholder="0.00"
+                                            step="0.01"
+                                            min="0"
+                                        >
+                                    </div>
+                                    <div class="alert alert-info mt-2 py-2 mb-0" id="cambioContainer" style="display: none;">
+                                        <small>
+                                            <strong>Cambio:</strong> Q<span id="cambio">0.00</span>
+                                        </small>
+                                    </div>
+                                </div>
+                                
+                            </div>
+                            
+                            <!-- Footer: Botón Facturar -->
+                            <div class="card-footer bg-white border-0 d-grid">
+                                <button 
+                                    type="button" 
+                                    class="btn btn-success btn-lg" 
+                                    id="btnFacturar"
+                                    disabled
+                                >
+                                    <i class="bi bi-receipt"></i> FACTURAR
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                </div>
+                
+            </main>
+            
+        </div>
+    </div>
+    
+    <!-- Incluir Modales -->
+    <div id="modals-container"></div>
+    
+    <!-- Bootstrap 5 JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios@1.6.0/dist/axios.min.js"></script>
+    
+    <!-- Utilities -->
+    <script src="../../utils/storage.js"></script>
+    <script src="../../utils/alerts.js"></script>
+    <script src="../../utils/formatter.js"></script>
+    <script src="../../utils/loader.js"></script>
+    <script src="../../utils/validator.js"></script>
+    
+    <!-- Config -->
+    <script src="../../config/api.js"></script>
+    
+    <!-- Services -->
+    <script src="../../services/auth.service.js"></script>
+    <script src="../../services/sucursales.service.js"></script>
+    <script src="../../services/productos.service.js"></script>
+    <script src="../../services/precios.service.js"></script>
+    <script src="../../services/clientes.service.js"></script>
+    <script src="../../services/ventas.service.js"></script>
+    <script src="../../services/inventario.service.js"></script>
+    
+    <!-- Controller -->
+    <script src="../../controllers/ventas.controller.js"></script>
+    
+    <!-- Cargar componentes -->
+    <script>
+        // Cargar Navbar
+        fetch('../../components/navbar.html')
+            .then(response => response.text())
+            .then(html => {
+                document.getElementById('navbar-container').innerHTML = html;
+            });
+        
+        // Cargar Sidebar
+        fetch('../../components/sidebar.html')
+            .then(response => response.text())
+            .then(html => {
+                document.getElementById('sidebar-container').innerHTML = html;
+            });
+        
+        // Cargar Modales
+        Promise.all([
+            fetch('../../components/modals/modal-cliente-rapido.html').then(r => r.text()),
+            fetch('../../components/modals/modal-factura-exitosa.html').then(r => r.text())
+        ]).then(([modalCliente, modalFactura]) => {
+            document.getElementById('modals-container').innerHTML = modalCliente + modalFactura;
+        });
+    </script>
+    
+</body>
+</html>

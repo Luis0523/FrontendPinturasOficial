@@ -40,8 +40,8 @@ const PreciosService = {
             if(!productoPresentacionId || !sucursalId) {
                 throw new Error('productoPresentacionId y sucursalId son requeridos');//
             }
-            console.log(`/precios/${productoPresentacionId}`);
-            //console.log(`/precios/vigente/${productoPresentacionId}/${sucursalId}`);
+            //console.log(`/precios/${productoPresentacionId}`);
+            console.log(`/precios/vigente/${productoPresentacionId}/${sucursalId}`);
             const response = await axios.get(`/precios/vigente/${productoPresentacionId}/${sucursalId}`);
            // const response = await axios.get(`/precios/${productoPresentacionId}`);
             console.log(response.data);
