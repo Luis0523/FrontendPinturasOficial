@@ -106,16 +106,30 @@ const CatalogoController = {
         const select = document.getElementById('sucursalPreciosModal');
         if (!select) return;
 
-        select.innerHTML = '<option value="">Seleccionar sucursal...</option>';
+        select.innerHTML = '<option value="">Todas las sucursales</option>';
 
         this.sucursales.forEach(suc => {
             const selected = suc.id === this.sucursalActual ? 'selected' : '';
             select.innerHTML += `<option value="${suc.id}" ${selected}>${suc.nombre}</option>`;
         });
-        select.addEventListener('change', (e) => {
-            this.sucursalSeleccionadaParaPrecios = e.target.value;
-            this.sucursalActual = e.target.value;
-            console.log(this.sucursalSeleccionadaParaPrecios);
+
+        select.addEventListener('change', async (e) => {
+            const sucursalId = e.target.value;
+            const sucursalNombre = e.target.options[e.target.selectedIndex].text;
+
+            this.sucursalSeleccionadaParaPrecios = sucursalId;
+            this.sucursalActual = sucursalId;
+
+            // Mostrar alert con estilo
+            if (sucursalId) {
+                Alerts.success(`Sucursal actualizada: ${sucursalNombre}. Mostrando productos disponibles en esta sucursal.`);
+            } else {
+                Alerts.info('Mostrando productos de todas las sucursales.');
+            }
+
+            // Recargar productos con el nuevo filtro de sucursal
+            this.currentPage = 1;
+            await this.loadProductos();
         });
 
         // Si hay sucursal del usuario, establecerla como seleccionada
@@ -233,14 +247,30 @@ const CatalogoController = {
      * Obtener filtros del formulario
      */
     getFiltersFromForm() {
-        return {
+        const estadoValue = document.getElementById('filterEstado')?.value;
+
+        const filtros = {
             buscar: document.getElementById('searchInput')?.value || '',
             categoria_id: document.getElementById('filterCategoria')?.value || '',
             marca_id: document.getElementById('filterMarca')?.value || '',
-            activo: document.getElementById('filterEstado')?.value || '',
+            // Si estadoValue es string vacío '', NO enviar el filtro (mostrar todos)
+            // Si es 'true' o 'false', enviar el filtro
+            activo: estadoValue !== '' ? estadoValue : undefined,
             page: this.currentPage,
             limit: this.limit
         };
+
+        // Eliminar undefined del objeto
+        if (filtros.activo === undefined) {
+            delete filtros.activo;
+        }
+
+        // Agregar filtro de sucursal si está seleccionada
+        if (this.sucursalActual) {
+            filtros.sucursal_id = this.sucursalActual;
+        }
+
+        return filtros;
     },
 
     /**
@@ -273,19 +303,23 @@ const CatalogoController = {
             // Contar presentaciones activas
             const numPresentaciones = producto.presentaciones?.length || 0;
 
+            // Estilo para productos inactivos
+            const rowClass = producto.activo ? '' : 'table-secondary opacity-75';
+
             return `
-                <tr>
+                <tr class="${rowClass}">
                     <td>
-                        <div class="bg-light rounded d-flex align-items-center justify-content-center" 
-                             style="width: 60px; height: 60px;">
-                            <i class="bi bi-palette text-muted fs-4"></i>
+                        <div class="bg-light rounded d-flex align-items-center justify-content-center"
+                             style="width: 60px; height: 60px; ${!producto.activo ? 'opacity: 0.5;' : ''}">
+                            <i class="bi bi-palette ${producto.activo ? 'text-muted' : 'text-secondary'} fs-4"></i>
                         </div>
                     </td>
                     <td>
-                        <span class="badge bg-secondary">${producto.codigo_sku || '-'}</span>
+                        <span class="badge ${producto.activo ? 'bg-secondary' : 'bg-dark'}">${producto.codigo_sku || '-'}</span>
+                        ${!producto.activo ? '<br><small class="badge bg-warning text-dark mt-1">DESACTIVADO</small>' : ''}
                     </td>
                     <td>
-                        <div class="fw-semibold">${producto.descripcion || '-'}</div>
+                        <div class="fw-semibold ${!producto.activo ? 'text-decoration-line-through' : ''}">${producto.descripcion || '-'}</div>
                         ${producto.tamano ? `<small class="text-muted">Tamaño: ${producto.tamano}</small>` : ''}
                     </td>
                     <td>${producto.categoria?.nombre || '-'}</td>
@@ -298,36 +332,45 @@ const CatalogoController = {
                         ` : '-'}
                     </td>
                     <td class="text-center">
-                        <span class="badge ${numPresentaciones > 0 ? 'bg-info' : 'bg-secondary'}" 
+                        <span class="badge ${numPresentaciones > 0 ? (producto.activo ? 'bg-info' : 'bg-secondary') : 'bg-secondary'}"
                               title="${numPresentaciones} presentación(es) configurada(s)">
                             <i class="bi bi-box"></i> ${numPresentaciones}
                         </span>
                     </td>
                     <td>
-                        <span class="badge ${producto.activo ? 'bg-success' : 'bg-secondary'}">
-                            ${producto.activo ? 'ACTIVO' : 'INACTIVO'}
+                        <span class="badge ${producto.activo ? 'bg-success' : 'bg-warning text-dark'}">
+                            ${producto.activo ? '✓ ACTIVO' : '✗ INACTIVO'}
                         </span>
                     </td>
                     <td class="text-center">
                         <div class="btn-group btn-group-sm" role="group">
-                            <button type="button" 
-                                    class="btn btn-outline-primary" 
+                            <button type="button"
+                                    class="btn btn-outline-primary"
                                     onclick="CatalogoController.viewDetalle(${producto.id})"
                                     title="Ver detalle">
                                 <i class="bi bi-eye"></i>
                             </button>
-                            <button type="button" 
-                                    class="btn btn-outline-warning" 
-                                    onclick="CatalogoController.openEditModal(${producto.id})"
-                                    title="Editar">
-                                <i class="bi bi-pencil"></i>
-                            </button>
-                            <button type="button" 
-                                    class="btn btn-outline-danger" 
-                                    onclick="CatalogoController.deleteProducto(${producto.id})"
-                                    title="Eliminar">
-                                <i class="bi bi-trash"></i>
-                            </button>
+                            ${producto.activo ? `
+                                <button type="button"
+                                        class="btn btn-outline-warning"
+                                        onclick="CatalogoController.openEditModal(${producto.id})"
+                                        title="Editar">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button type="button"
+                                        class="btn btn-outline-danger"
+                                        onclick="CatalogoController.deleteProducto(${producto.id})"
+                                        title="Desactivar">
+                                    <i class="bi bi-toggle-off"></i>
+                                </button>
+                            ` : `
+                                <button type="button"
+                                        class="btn btn-success"
+                                        onclick="CatalogoController.reactivarProducto(${producto.id})"
+                                        title="Reactivar producto">
+                                    <i class="bi bi-arrow-repeat me-1"></i>Reactivar
+                                </button>
+                            `}
                         </div>
                     </td>
                 </tr>
@@ -1052,6 +1095,9 @@ const CatalogoController = {
             // Cargar precios inicialmente
             await this.loadPreciosDetalle();
 
+            // Cargar inventario por sucursal
+            await this.renderDetalleInventario();
+
             Loader.hide();
 
             // Mostrar modal
@@ -1101,48 +1147,224 @@ const CatalogoController = {
         if (this.presentacionesProducto.length === 0) {
             tbody.innerHTML = `
                 <tr>
-                    <td colspan="5" class="text-center text-muted py-3">
+                    <td colspan="4" class="text-center text-muted py-3">
                         <i class="bi bi-inbox"></i> No hay presentaciones agregadas
-                        <br>
-                        <button class="btn btn-sm btn-primary mt-2" onclick="CatalogoController.openAgregarPresentacionModal()">
-                            <i class="bi bi-plus-circle"></i> Agregar Presentación
-                        </button>
                     </td>
                 </tr>
             `;
             return;
         }
 
+        // Obtener sucursal actual para precios
+        const sucursalId = this.sucursalActual;
+
+        // Renderizar con loading inicial
         tbody.innerHTML = this.presentacionesProducto.map(pp => `
-            <tr>
+            <tr data-pp-id="${pp.id}">
                 <td>${pp.presentacion?.nombre || pp.Presentacion?.nombre || '-'}</td>
-                <td class="text-center">-</td>
-                <td class="text-center">-</td>
-                <td class="text-center">-</td>
+                <td class="text-center precio-venta-detalle-${pp.id}">
+                    <span class="spinner-border spinner-border-sm" role="status"></span>
+                </td>
+                <td class="text-center stock-minimo-detalle-${pp.id}">
+                    <span class="spinner-border spinner-border-sm" role="status"></span>
+                </td>
                 <td class="text-center">
                     <span class="badge ${pp.activo ? 'bg-success' : 'bg-secondary'}">
                         ${pp.activo ? 'Activo' : 'Inactivo'}
                     </span>
                 </td>
-                <td class="text-center">
-                    ${pp.activo ? `
-                        <button type="button" 
-                                class="btn btn-sm btn-outline-danger" 
-                                onclick="CatalogoController.desactivarPresentacion(${pp.id})"
-                                title="Desactivar">
-                            <i class="bi bi-x-circle"></i>
-                        </button>
-                    ` : `
-                        <button type="button" 
-                                class="btn btn-sm btn-outline-success" 
-                                onclick="CatalogoController.reactivarPresentacion(${pp.id})"
-                                title="Reactivar">
-                            <i class="bi bi-check-circle"></i>
-                        </button>
-                    `}
-                </td>
             </tr>
         `).join('');
+
+        // Cargar precios de forma asíncrona para cada presentación
+        for (const pp of this.presentacionesProducto) {
+            if (!pp.activo) {
+                // Si está inactivo, mostrar guiones
+                document.querySelector(`.precio-venta-detalle-${pp.id}`).innerHTML =
+                    '<span class="text-muted">-</span>';
+                document.querySelector(`.stock-minimo-detalle-${pp.id}`).innerHTML =
+                    '<span class="text-muted">-</span>';
+                continue;
+            }
+
+            try {
+                // Obtener precio vigente para esta presentación y sucursal
+                const precioRes = await PreciosService.getPrecioVigente(pp.id, sucursalId);
+                const precio = precioRes.data;
+
+                // Mostrar precio de venta
+                document.querySelector(`.precio-venta-detalle-${pp.id}`).innerHTML =
+                    precio ? Formatter.formatCurrency(precio.precio_venta) :
+                        '<span class="text-muted">Sin precio</span>';
+
+                // Mostrar stock mínimo
+                document.querySelector(`.stock-minimo-detalle-${pp.id}`).innerHTML =
+                    precio ? (precio.stock_minimo || '<span class="text-muted">-</span>') :
+                        '<span class="text-muted">-</span>';
+
+            } catch (error) {
+                console.error(`Error cargando precio para presentación ${pp.id}:`, error);
+
+                // Si es 404, significa que no hay precio configurado
+                if (error.message && error.message.includes('404')) {
+                    document.querySelector(`.precio-venta-detalle-${pp.id}`).innerHTML =
+                        '<span class="text-warning"><i class="bi bi-exclamation-triangle"></i> Sin configurar</span>';
+                    document.querySelector(`.stock-minimo-detalle-${pp.id}`).innerHTML =
+                        '<span class="text-muted">-</span>';
+                } else {
+                    // En caso de otro error
+                    document.querySelector(`.precio-venta-detalle-${pp.id}`).innerHTML =
+                        '<span class="text-danger">Error</span>';
+                    document.querySelector(`.stock-minimo-detalle-${pp.id}`).innerHTML =
+                        '<span class="text-danger">Error</span>';
+                }
+            }
+        }
+    },
+
+    /**
+     * Renderizar inventario por sucursal en el detalle
+     */
+    async renderDetalleInventario() {
+        const tbody = document.getElementById('detalle_inventario');
+        if (!tbody) return;
+
+        if (this.presentacionesProducto.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="6" class="text-center text-muted py-3">
+                        <i class="bi bi-inbox"></i> No hay presentaciones para mostrar inventario
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        // Mostrar loading inicial
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="6" class="text-center py-3">
+                    <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+                    Cargando inventario...
+                </td>
+            </tr>
+        `;
+
+        try {
+            // Recolectar todos los datos de inventario
+            const inventarioData = [];
+
+            // Para cada presentación activa, obtener su stock en todas las sucursales
+            for (const pp of this.presentacionesProducto) {
+                if (!pp.activo) continue;
+
+                try {
+                    const stockRes = await InventarioService.getStockProducto(pp.id);
+                    const stocks = stockRes.data || [];
+
+                    // Agregar cada registro de stock al array
+                    stocks.forEach(stock => {
+                        inventarioData.push({
+                            sucursal_nombre: stock.sucursal?.nombre || stock.Sucursal?.nombre || '-',
+                            presentacion_nombre: pp.presentacion?.nombre || pp.Presentacion?.nombre || '-',
+                            existencia: stock.existencia || 0,
+                            stock_minimo: stock.minimo || '-',
+                            stock_maximo: stock.maximo || '-',
+                            estado: this.getEstadoStock(stock.existencia, stock.minimo, stock.maximo)
+                        });
+                    });
+
+                } catch (error) {
+                    console.error(`Error cargando stock para presentación ${pp.id}:`, error);
+                }
+            }
+
+            // Renderizar la tabla
+            if (inventarioData.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="text-center text-muted py-3">
+                            <i class="bi bi-info-circle"></i> No hay inventario registrado para este producto
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = inventarioData.map(item => `
+                <tr>
+                    <td>${item.sucursal_nombre}</td>
+                    <td>${item.presentacion_nombre}</td>
+                    <td class="text-center">
+                        <span class="badge bg-${item.estado.color}">
+                            ${item.existencia}
+                        </span>
+                    </td>
+                    <td class="text-center">${item.stock_minimo}</td>
+                    <td class="text-center">${item.stock_maximo}</td>
+                    <td class="text-center">
+                        <span class="badge bg-${item.estado.badgeColor}">
+                            <i class="bi bi-${item.estado.icon}"></i>
+                            ${item.estado.texto}
+                        </span>
+                    </td>
+                </tr>
+            `).join('');
+
+        } catch (error) {
+            console.error('Error cargando inventario:', error);
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="6" class="text-center text-danger py-3">
+                        <i class="bi bi-exclamation-triangle"></i> Error al cargar inventario
+                    </td>
+                </tr>
+            `;
+        }
+    },
+
+    /**
+     * Obtener estado del stock (óptimo, bajo, crítico, sin stock)
+     */
+    getEstadoStock(existencia, stockMin, stockMax) {
+        const cantidad = parseInt(existencia) || 0;
+        const minimo = parseInt(stockMin) || 0;
+        const maximo = parseInt(stockMax) || 999999;
+
+        if (cantidad === 0) {
+            return {
+                texto: 'Sin Stock',
+                badgeColor: 'danger',
+                color: 'danger',
+                icon: 'x-circle-fill'
+            };
+        }
+
+        if (cantidad < minimo) {
+            return {
+                texto: 'Bajo',
+                badgeColor: 'warning',
+                color: 'warning',
+                icon: 'exclamation-triangle-fill'
+            };
+        }
+
+        if (cantidad >= minimo && cantidad <= maximo) {
+            return {
+                texto: 'Óptimo',
+                badgeColor: 'success',
+                color: 'info',
+                icon: 'check-circle-fill'
+            };
+        }
+
+        // Si supera el máximo
+        return {
+            texto: 'Exceso',
+            badgeColor: 'info',
+            color: 'primary',
+            icon: 'arrow-up-circle-fill'
+        };
     },
 
     /**
@@ -1509,31 +1731,114 @@ const CatalogoController = {
     },
 
     /**
-     * Eliminar producto
+     * Eliminar producto (Soft Delete - desactiva el producto y sus presentaciones)
      */
     async deleteProducto(id) {
-        Alerts.confirm(
-            '¿Estás seguro de eliminar este producto? Esta acción no se puede deshacer.',
-            'Eliminar Producto',
-            async () => {
-                try {
-                    Loader.show('Eliminando...');
-
-                    await ProductosService.deleteProducto(id);
-
-                    Loader.hide();
-                    Alerts.success('Producto eliminado exitosamente');
-
-                    // Recargar lista
-                    await this.loadProductos();
-
-                } catch (error) {
-                    Loader.hide();
-                    console.error('Error eliminando producto:', error);
-                    Alerts.error(error.message || 'Error al eliminar el producto');
-                }
+        // Usar SweetAlert2 para confirmación con información clara
+        const result = await Swal.fire({
+            title: '¿Desactivar este producto?',
+            html: `
+                <div class="text-start">
+                    <p>El producto será <strong>desactivado</strong> junto con todas sus presentaciones.</p>
+                    <div class="alert alert-info mt-3">
+                        <i class="bi bi-info-circle me-2"></i>
+                        <strong>Nota:</strong> El producto no se eliminará permanentemente.
+                        <ul class="mb-0 mt-2">
+                            <li>No aparecerá en el catálogo ni en ventas</li>
+                            <li>Se conserva todo el historial</li>
+                            <li>Puedes reactivarlo cuando quieras</li>
+                        </ul>
+                    </div>
+                </div>
+            `,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: '<i class="bi bi-toggle-off me-2"></i>Sí, desactivar',
+            cancelButtonText: 'Cancelar',
+            confirmButtonColor: '#dc3545',
+            cancelButtonColor: '#6c757d',
+            customClass: {
+                confirmButton: 'btn btn-danger',
+                cancelButton: 'btn btn-secondary'
             }
-        );
+        });
+
+        if (!result.isConfirmed) {
+            return;
+        }
+
+        try {
+            Loader.show('Desactivando producto...');
+
+            // El backend ahora hace soft delete automáticamente
+            // Desactiva el producto Y todas sus presentaciones
+            await ProductosService.deleteProducto(id);
+
+            Loader.hide();
+            Alerts.success('Producto desactivado exitosamente. Ya no aparecerá en el catálogo ni en ventas.');
+
+            // Recargar lista
+            await this.loadProductos();
+
+        } catch (error) {
+            Loader.hide();
+            console.error('Error desactivando producto:', error);
+            Alerts.error(error.message || 'Error al desactivar el producto');
+        }
+    },
+
+    /**
+     * Reactivar producto desactivado
+     */
+    async reactivarProducto(id) {
+        const result = await Swal.fire({
+            title: '¿Reactivar este producto?',
+            html: `
+                <div class="text-start">
+                    <p>El producto será <strong>reactivado</strong> junto con todas sus presentaciones.</p>
+                    <div class="alert alert-success mt-3">
+                        <i class="bi bi-check-circle me-2"></i>
+                        <strong>Al reactivar:</strong>
+                        <ul class="mb-0 mt-2">
+                            <li>Volverá a aparecer en el catálogo</li>
+                            <li>Estará disponible para ventas</li>
+                            <li>Se recuperan todos los datos y precios</li>
+                        </ul>
+                    </div>
+                </div>
+            `,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: '<i class="bi bi-check-circle me-2"></i>Sí, reactivar',
+            cancelButtonText: 'Cancelar',
+            confirmButtonColor: '#28a745',
+            cancelButtonColor: '#6c757d',
+            customClass: {
+                confirmButton: 'btn btn-success',
+                cancelButton: 'btn btn-secondary'
+            }
+        });
+
+        if (!result.isConfirmed) {
+            return;
+        }
+
+        try {
+            Loader.show('Reactivando producto...');
+
+            await ProductosService.reactivarProducto(id);
+
+            Loader.hide();
+            Alerts.success('Producto reactivado exitosamente. Ya está disponible en el catálogo y ventas.');
+
+            // Recargar lista
+            await this.loadProductos();
+
+        } catch (error) {
+            Loader.hide();
+            console.error('Error reactivando producto:', error);
+            Alerts.error(error.message || 'Error al reactivar el producto');
+        }
     },
 
     /**

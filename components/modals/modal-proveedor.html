@@ -1,0 +1,340 @@
+<!-- Modal Proveedor CRUD -->
+<div class="modal fade" id="modalProveedor" tabindex="-1" aria-labelledby="modalProveedorLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+
+      <!-- Header -->
+      <div class="modal-header bg-success text-white">
+        <h5 class="modal-title" id="modalProveedorLabel">
+          <i class="bi bi-building-add"></i> <span id="modalProveedorTitle">Nuevo Proveedor</span>
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <!-- Body -->
+      <div class="modal-body">
+        <form id="formProveedor">
+          <input type="hidden" id="proveedorId" name="id">
+
+          <div class="row">
+            <!-- Columna Izquierda -->
+            <div class="col-md-6">
+
+              <!-- Nombre Empresa -->
+              <div class="mb-3">
+                <label for="inputNombre" class="form-label">
+                  Nombre de la Empresa <span class="text-danger">*</span>
+                </label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="inputNombre"
+                  name="nombre"
+                  placeholder="Ej: Pinturas del Caribe S.A."
+                  required
+                  autocomplete="off"
+                >
+                <div class="invalid-feedback">
+                  El nombre es obligatorio (mínimo 3 caracteres)
+                </div>
+              </div>
+
+              <!-- Nombre Contacto -->
+              <div class="mb-3">
+                <label for="inputContacto" class="form-label">
+                  Nombre del Contacto
+                </label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="inputContacto"
+                  name="contacto"
+                  placeholder="Ej: Juan Carlos Pérez"
+                  autocomplete="off"
+                >
+                <small class="form-text text-muted">
+                  <i class="bi bi-info-circle"></i>
+                  Persona de contacto en la empresa
+                </small>
+              </div>
+
+              <!-- Email -->
+              <div class="mb-3">
+                <label for="inputEmail" class="form-label">
+                  Correo Electrónico
+                </label>
+                <div class="input-group">
+                  <span class="input-group-text">
+                    <i class="bi bi-envelope"></i>
+                  </span>
+                  <input
+                    type="email"
+                    class="form-control"
+                    id="inputEmail"
+                    name="email"
+                    placeholder="Ej: ventas@empresa.com"
+                    autocomplete="off"
+                  >
+                </div>
+                <div class="invalid-feedback">
+                  Ingresa un correo válido
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Columna Derecha -->
+            <div class="col-md-6">
+
+              <!-- Teléfono -->
+              <div class="mb-3">
+                <label for="inputTelefono" class="form-label">
+                  Teléfono
+                </label>
+                <div class="input-group">
+                  <span class="input-group-text">
+                    <i class="bi bi-telephone"></i>
+                  </span>
+                  <input
+                    type="tel"
+                    class="form-control"
+                    id="inputTelefono"
+                    name="telefono"
+                    placeholder="Ej: 2222-3333"
+                    autocomplete="off"
+                    maxlength="20"
+                  >
+                </div>
+                <small class="form-text text-muted">
+                  <i class="bi bi-info-circle"></i>
+                  Formato: XXXX-XXXX (8 dígitos)
+                </small>
+                <div class="invalid-feedback">
+                  Teléfono inválido (debe tener 8 dígitos)
+                </div>
+              </div>
+
+              <!-- Dirección -->
+              <div class="mb-3">
+                <label for="inputDireccion" class="form-label">
+                  Dirección
+                </label>
+                <textarea
+                  class="form-control"
+                  id="inputDireccion"
+                  name="direccion"
+                  rows="3"
+                  placeholder="Ej: 10a Avenida 15-60 Zona 10, Ciudad"
+                ></textarea>
+              </div>
+
+              <!-- Estado (Solo visible al editar) -->
+              <div class="mb-3" id="estadoContainer" style="display: none;">
+                <label for="inputActivo" class="form-label">
+                  Estado
+                </label>
+                <select class="form-select" id="inputActivo" name="activo">
+                  <option value="true">Activo</option>
+                  <option value="false">Inactivo</option>
+                </select>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Información adicional al editar -->
+          <div id="infoAdicional" style="display: none;">
+            <hr>
+            <div class="row text-muted small">
+              <div class="col-md-6">
+                <p class="mb-1">
+                  <strong>Creado:</strong> <span id="infoCreado">-</span>
+                </p>
+              </div>
+              <div class="col-md-6">
+                <p class="mb-1">
+                  <strong>Última actualización:</strong> <span id="infoActualizado">-</span>
+                </p>
+              </div>
+            </div>
+          </div>
+
+        </form>
+      </div>
+
+      <!-- Footer -->
+      <div class="modal-footer">
+        <button
+          type="button"
+          class="btn btn-secondary"
+          data-bs-dismiss="modal"
+        >
+          <i class="bi bi-x-circle"></i> Cancelar
+        </button>
+        <button
+          type="button"
+          class="btn btn-success"
+          id="btnGuardarProveedor"
+        >
+          <i class="bi bi-save"></i> <span id="btnGuardarText">Guardar Proveedor</span>
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Modal Detalle Proveedor (Vista Solo Lectura) -->
+<div class="modal fade" id="modalDetalleProveedor" tabindex="-1" aria-labelledby="modalDetalleProveedorLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+
+      <!-- Header -->
+      <div class="modal-header bg-info text-white">
+        <h5 class="modal-title" id="modalDetalleProveedorLabel">
+          <i class="bi bi-building"></i> Detalle del Proveedor
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <!-- Body -->
+      <div class="modal-body">
+        <div class="row">
+          <div class="col-md-6">
+            <dl class="row">
+              <dt class="col-sm-4">ID:</dt>
+              <dd class="col-sm-8" id="detalleId">-</dd>
+
+              <dt class="col-sm-4">Empresa:</dt>
+              <dd class="col-sm-8" id="detalleNombre">-</dd>
+
+              <dt class="col-sm-4">Contacto:</dt>
+              <dd class="col-sm-8" id="detalleContacto">-</dd>
+
+              <dt class="col-sm-4">Email:</dt>
+              <dd class="col-sm-8" id="detalleEmail">-</dd>
+            </dl>
+          </div>
+
+          <div class="col-md-6">
+            <dl class="row">
+              <dt class="col-sm-4">Teléfono:</dt>
+              <dd class="col-sm-8" id="detalleTelefono">-</dd>
+
+              <dt class="col-sm-4">Dirección:</dt>
+              <dd class="col-sm-8" id="detalleDireccion">-</dd>
+
+              <dt class="col-sm-4">Estado:</dt>
+              <dd class="col-sm-8" id="detalleEstado">-</dd>
+
+              <dt class="col-sm-4">Creado:</dt>
+              <dd class="col-sm-8" id="detalleCreado">-</dd>
+            </dl>
+          </div>
+        </div>
+
+        <!-- Estadísticas del proveedor (si hay datos) -->
+        <div id="statsContainer" style="display: none;">
+          <hr>
+          <h6 class="mb-3"><i class="bi bi-graph-up"></i> Estadísticas</h6>
+          <div class="row text-center">
+            <div class="col-md-4">
+              <div class="card bg-light">
+                <div class="card-body">
+                  <h3 class="mb-0" id="statsOrdenes">0</h3>
+                  <small class="text-muted">Órdenes de Compra</small>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="card bg-light">
+                <div class="card-body">
+                  <h3 class="mb-0" id="statsTotal">Q 0.00</h3>
+                  <small class="text-muted">Total Comprado</small>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="card bg-light">
+                <div class="card-body">
+                  <h3 class="mb-0" id="statsUltimaOrden">-</h3>
+                  <small class="text-muted">Última Orden</small>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="modal-footer">
+        <button
+          type="button"
+          class="btn btn-secondary"
+          data-bs-dismiss="modal"
+        >
+          <i class="bi bi-x-circle"></i> Cerrar
+        </button>
+        <button
+          type="button"
+          class="btn btn-primary"
+          id="btnEditarDesdeDetalle"
+        >
+          <i class="bi bi-pencil"></i> Editar
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Estilos adicionales -->
+<style>
+  #modalProveedor .form-label,
+  #modalDetalleProveedor .form-label {
+    font-weight: 500;
+    color: #495057;
+  }
+
+  #modalProveedor .form-control:focus {
+    border-color: #198754;
+    box-shadow: 0 0 0 0.25rem rgba(25, 135, 84, 0.25);
+  }
+
+  #modalProveedor textarea {
+    resize: none;
+  }
+
+  #btnGuardarProveedor.loading {
+    position: relative;
+    pointer-events: none;
+  }
+
+  #btnGuardarProveedor.loading::after {
+    content: "";
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    top: 50%;
+    left: 50%;
+    margin-left: -8px;
+    margin-top: -8px;
+    border: 2px solid #ffffff;
+    border-radius: 50%;
+    border-top-color: transparent;
+    animation: spinner 0.6s linear infinite;
+  }
+
+  @keyframes spinner {
+    to { transform: rotate(360deg); }
+  }
+
+  #modalDetalleProveedor dl dt {
+    font-weight: 600;
+    color: #6c757d;
+  }
+
+  #modalDetalleProveedor dl dd {
+    color: #212529;
+  }
+</style>

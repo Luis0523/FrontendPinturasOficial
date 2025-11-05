@@ -9,11 +9,12 @@ const ProductosService = {
     async getProductos(filtros = {}) {
         try {
             const params = new URLSearchParams();
-            
+
             if (filtros.buscar) params.append('buscar', filtros.buscar);
             if (filtros.categoria_id) params.append('categoria_id', filtros.categoria_id);
             if (filtros.marca_id) params.append('marca_id', filtros.marca_id);
             if (filtros.activo !== undefined && filtros.activo !== '') params.append('activo', filtros.activo);
+            if (filtros.sucursal_id) params.append('sucursal_id', filtros.sucursal_id);
             if (filtros.page) params.append('page', filtros.page);
             if (filtros.limit) params.append('limit', filtros.limit);
 
@@ -61,11 +62,23 @@ const ProductosService = {
     },
 
     /**
-     * Eliminar producto
+     * Eliminar producto (Soft Delete - marca como inactivo)
      */
     async deleteProducto(id) {
         try {
             const response = await axios.delete(`/productos/${id}`);
+            return response.data;
+        } catch (error) {
+            throw this.handleError(error);
+        }
+    },
+
+    /**
+     * Reactivar producto desactivado
+     */
+    async reactivarProducto(id) {
+        try {
+            const response = await axios.patch(`/productos/${id}/reactivar`);
             return response.data;
         } catch (error) {
             throw this.handleError(error);
@@ -116,6 +129,18 @@ const ProductosService = {
     async reactivarProductoPresentacion(productoPresentacionId) {
         try {
             const response = await axios.patch(`/producto-presentacion/${productoPresentacionId}/reactivar`);
+            return response.data;
+        } catch (error) {
+            throw this.handleError(error);
+        }
+    },
+
+    /**
+     * Eliminar presentación del producto (DELETE permanente)
+     */
+    async deleteProductoPresentacion(productoPresentacionId) {
+        try {
+            const response = await axios.delete(`/producto-presentacion/${productoPresentacionId}`);
             return response.data;
         } catch (error) {
             throw this.handleError(error);

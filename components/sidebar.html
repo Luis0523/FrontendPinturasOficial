@@ -20,8 +20,8 @@
 
             <!-- Productos -->
             <li class="nav-item mb-2" data-permission="canViewProducts">
-                <a class="nav-link text-white collapsed" 
-                   data-bs-toggle="collapse" 
+                <a class="nav-link text-white collapsed"
+                   data-bs-toggle="collapse"
                    href="#productosSubmenu">
                     <i class="bi bi-box-seam me-2"></i>
                     <span>Productos</span>
@@ -30,23 +30,24 @@
                 <div class="collapse" id="productosSubmenu">
                     <ul class="nav flex-column ms-3">
                         <li class="nav-item">
-                            <a class="nav-link text-white-50" href="/views/productos/lista.html">
-                                <i class="bi bi-list-ul me-2"></i>Lista de Productos
+                            <a class="nav-link text-white-50" href="/views/productos/index.html">
+                                <i class="bi bi-list-ul me-2"></i>Gestión de Productos
                             </a>
                         </li>
-                        <li class="nav-item" data-permission="canCreateProducts">
-                            <a class="nav-link text-white-50" href="/views/productos/crear.html">
-                                <i class="bi bi-plus-circle me-2"></i>Nuevo Producto
+                        <li class="nav-item">
+                            <a class="nav-link text-white-50" href="/views/productos/catalogo.html">
+                                <i class="bi bi-grid me-2"></i>Catálogo
                             </a>
                         </li>
                     </ul>
                 </div>
             </li>
 
-            <!-- Inventario -->
+            <!-- Inventario (PENDIENTE DE IMPLEMENTAR) -->
+            <!--
             <li class="nav-item mb-2" data-permission="canViewInventory">
-                <a class="nav-link text-white collapsed" 
-                   data-bs-toggle="collapse" 
+                <a class="nav-link text-white collapsed"
+                   data-bs-toggle="collapse"
                    href="#inventarioSubmenu">
                     <i class="bi bi-clipboard-data me-2"></i>
                     <span>Inventario</span>
@@ -72,30 +73,57 @@
                     </ul>
                 </div>
             </li>
+            -->
 
             <!-- Ventas -->
             <li class="nav-item mb-2" data-permission="canAccessPOS">
-                <a class="nav-link text-white collapsed" 
-                   data-bs-toggle="collapse" 
-                   href="#ventasSubmenu">
+                <a class="nav-link text-white" href="/views/ventas/pos.html">
                     <i class="bi bi-cart-check me-2"></i>
-                    <span>Ventas</span>
+                    <span>Punto de Venta</span>
+                </a>
+            </li>
+
+            <!-- Facturas (PENDIENTE) -->
+            <!--
+            <li class="nav-item mb-2" data-permission="canViewSales">
+                <a class="nav-link text-white" href="/views/ventas/facturas.html">
+                    <i class="bi bi-receipt me-2"></i>
+                    <span>Facturas</span>
+                </a>
+            </li>
+            -->
+
+            <!-- Compras -->
+            <li class="nav-item mb-2" data-permission="canCreatePurchaseOrders">
+                <a class="nav-link text-white collapsed"
+                   data-bs-toggle="collapse"
+                   href="#comprasSubmenu">
+                    <i class="bi bi-cart-plus me-2"></i>
+                    <span>Compras</span>
                     <i class="bi bi-chevron-down ms-auto"></i>
                 </a>
-                <div class="collapse" id="ventasSubmenu">
+                <div class="collapse" id="comprasSubmenu">
                     <ul class="nav flex-column ms-3">
                         <li class="nav-item">
-                            <a class="nav-link text-white-50" href="/views/ventas/pos.html">
-                                <i class="bi bi-calculator me-2"></i>Punto de Venta
+                            <a class="nav-link text-white-50" href="/views/compras/index.html">
+                                <i class="bi bi-file-text me-2"></i>Órdenes de Compra
                             </a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-white-50" href="/views/ventas/facturas.html">
-                                <i class="bi bi-receipt me-2"></i>Facturas
+                        <li class="nav-item" data-permission="canViewProviders">
+                            <a class="nav-link text-white-50" href="/views/proveedores/index.html">
+                                <i class="bi bi-building me-2"></i>Proveedores
                             </a>
                         </li>
                     </ul>
                 </div>
+            </li>
+
+            <!-- Clientes -->
+            <li class="nav-item mb-2">
+                <a class="nav-link text-white" href="/views/clientes/index.html">
+                    <i class="bi bi-people me-2"></i>
+                    <span>Clientes</span>
+                </a>
             </li>
 
             <!-- Usuarios (solo admin y gerente) -->
@@ -106,10 +134,11 @@
                 </a>
             </li>
 
-            <!-- Configuración (solo admin) -->
+            <!-- Configuración (PENDIENTE DE IMPLEMENTAR) -->
+            <!--
             <li class="nav-item mb-2" data-permission="canAccessSettings">
-                <a class="nav-link text-white collapsed" 
-                   data-bs-toggle="collapse" 
+                <a class="nav-link text-white collapsed"
+                   data-bs-toggle="collapse"
                    href="#configuracionSubmenu">
                     <i class="bi bi-gear me-2"></i>
                     <span>Configuración</span>
@@ -130,11 +159,13 @@
                     </ul>
                 </div>
             </li>
+            -->
 
-            <!-- Reportes -->
+            <!-- Reportes (PENDIENTE DE IMPLEMENTAR) -->
+            <!--
             <li class="nav-item mb-2" data-permission="canViewAllReports">
-                <a class="nav-link text-white collapsed" 
-                   data-bs-toggle="collapse" 
+                <a class="nav-link text-white collapsed"
+                   data-bs-toggle="collapse"
                    href="#reportesSubmenu">
                     <i class="bi bi-graph-up me-2"></i>
                     <span>Reportes</span>
@@ -155,6 +186,7 @@
                     </ul>
                 </div>
             </li>
+            -->
 
         </ul>
     </nav>

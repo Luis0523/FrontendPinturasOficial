@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Usuarios - Sistema de Pinturas</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+
+    <!-- Estilos personalizados -->
+    <link href="../../assets/css/style.css" rel="stylesheet">
+</head>
+
+<body>
+    <div class="main-wrapper">
+        <!-- Sidebar -->
+        <div id="sidebar-container"></div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Navbar -->
+            <div id="navbar-container"></div>
+
+            <!-- Content -->
+            <div class="content-wrapper">
+                <!-- Page Header -->
+                <div class="page-header">
+                    <div class="d-flex justify-content-between align-items-center flex-wrap">
+                        <div>
+                            <h1 class="page-title">Gestión de Usuarios</h1>
+                            <div class="page-breadcrumb">
+                                <i class="bi bi-house-door"></i>
+                                <span>Inicio</span>
+                                <i class="bi bi-chevron-right"></i>
+                                <span>Usuarios</span>
+                            </div>
+                        </div>
+                        <div class="mt-3 mt-md-0" data-permission="canManageUsers">
+                            <button class="btn btn-primary" onclick="UsuariosController.openCreateModal()">
+                                <i class="bi bi-plus-circle me-2"></i>Nuevo Usuario
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Filtros y Búsqueda -->
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <!-- Búsqueda -->
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold">Búsqueda</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="bi bi-search"></i>
+                                    </span>
+                                    <input type="text" class="form-control" id="searchInput"
+                                        placeholder="Nombre, email...">
+                                </div>
+                            </div>
+
+                            <!-- Filtro por Rol -->
+                            <div class="col-md-3">
+                                <label class="form-label fw-semibold">Rol</label>
+                                <select class="form-select" id="filterRol">
+                                    <option value="">Todos los roles</option>
+                                    <option value="Administrador">Administrador</option>
+                                    <option value="Gerente">Gerente</option>
+                                    <option value="Bodeguero">Bodeguero</option>
+                                    <option value="Cajero">Cajero</option>
+                                    <option value="Vendedor">Vendedor</option>
+                                </select>
+                            </div>
+
+                            <!-- Filtro por Estado -->
+                            <div class="col-md-2">
+                                <label class="form-label fw-semibold">Estado</label>
+                                <select class="form-select" id="filterEstado">
+                                    <option value="">Todos</option>
+                                    <option value="true" selected>Activos</option>
+                                    <option value="false">Inactivos</option>
+                                </select>
+                            </div>
+
+                            <!-- Botón Limpiar -->
+                            <div class="col-md-3 d-flex align-items-end">
+                                <button class="btn btn-outline-secondary w-100" onclick="UsuariosController.clearFilters()">
+                                    <i class="bi bi-x-circle me-2"></i>Limpiar Filtros
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tabla de Usuarios -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="bi bi-person-badge me-2"></i>Lista de Usuarios
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <!-- Tabla -->
+                        <div id="tableContainer" class="table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th width="5%">ID</th>
+                                        <th width="20%">Nombre</th>
+                                        <th width="20%">Email</th>
+                                        <th width="12%">Rol</th>
+                                        <th width="15%">Sucursal</th>
+                                        <th width="12%">Teléfono</th>
+                                        <th width="8%">Estado</th>
+                                        <th width="8%">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="usuariosTableBody">
+                                    <!-- Filas dinámicas -->
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Estado vacío -->
+                        <div id="emptyState" class="text-center py-5" style="display: none;">
+                            <i class="bi bi-inbox text-muted" style="font-size: 4rem;"></i>
+                            <p class="text-muted mt-3">No se encontraron usuarios</p>
+                            <button class="btn btn-primary" onclick="UsuariosController.openCreateModal()"
+                                    data-permission="canManageUsers">
+                                <i class="bi bi-plus-circle me-2"></i>Crear primer usuario
+                            </button>
+                        </div>
+
+                        <!-- Paginación -->
+                        <div id="paginationContainer" class="d-flex justify-content-between align-items-center mt-4">
+                            <div>
+                                <small class="text-muted" id="paginationInfo">Mostrando 0 a 0 de 0 usuarios</small>
+                            </div>
+                            <nav>
+                                <ul class="pagination pagination-sm mb-0" id="pagination">
+                                    <!-- Paginación dinámica -->
+                                </ul>
+                            </nav>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div id="footer-container"></div>
+        </div>
+    </div>
+
+    <!-- Modal Usuario (Crear/Editar) -->
+    <div class="modal fade" id="modalUsuario" tabindex="-1" data-bs-backdrop="static">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="modalUsuarioLabel">
+                        <i class="bi bi-person-plus me-2"></i>Nuevo Usuario
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formUsuario" novalidate>
+                        <div class="row g-3">
+                            <!-- Nombre completo -->
+                            <div class="col-md-6">
+                                <label for="inputNombre" class="form-label">
+                                    Nombre Completo <span class="text-danger">*</span>
+                                </label>
+                                <input type="text" class="form-control" id="inputNombre" required
+                                    placeholder="Ingrese nombre completo">
+                                <div class="invalid-feedback">El nombre es requerido (mínimo 3 caracteres)</div>
+                            </div>
+
+                            <!-- Email -->
+                            <div class="col-md-6">
+                                <label for="inputEmail" class="form-label">
+                                    Email <span class="text-danger">*</span>
+                                </label>
+                                <input type="email" class="form-control" id="inputEmail" required
+                                    placeholder="usuario@ejemplo.com">
+                                <div class="invalid-feedback">Ingrese un email válido</div>
+                            </div>
+
+                            <!-- Contraseña (solo en modo crear) -->
+                            <div class="col-md-6" id="passwordGroup">
+                                <label for="inputPassword" class="form-label">
+                                    Contraseña <span class="text-danger">*</span>
+                                </label>
+                                <input type="password" class="form-control" id="inputPassword"
+                                    placeholder="Mínimo 6 caracteres">
+                                <div class="invalid-feedback">La contraseña debe tener al menos 6 caracteres</div>
+                                <small class="form-text text-muted">
+                                    <i class="bi bi-info-circle"></i> La contraseña debe tener al menos 6 caracteres
+                                </small>
+                            </div>
+
+                            <!-- Rol -->
+                            <div class="col-md-6">
+                                <label for="selectRol" class="form-label">
+                                    Rol <span class="text-danger">*</span>
+                                </label>
+                                <select class="form-select" id="selectRol" required>
+                                    <option value="">Seleccione un rol</option>
+                                </select>
+                                <div class="invalid-feedback">Seleccione un rol</div>
+                            </div>
+
+                            <!-- Sucursal -->
+                            <div class="col-md-6">
+                                <label for="selectSucursal" class="form-label">
+                                    Sucursal <span class="text-danger">*</span>
+                                </label>
+                                <select class="form-select" id="selectSucursal" required>
+                                    <option value="">Seleccione una sucursal</option>
+                                </select>
+                                <div class="invalid-feedback">Seleccione una sucursal</div>
+                            </div>
+
+                            <!-- Teléfono -->
+                            <div class="col-md-6">
+                                <label for="inputTelefono" class="form-label">Teléfono</label>
+                                <input type="tel" class="form-control" id="inputTelefono"
+                                    placeholder="12345678">
+                                <div class="invalid-feedback">Ingrese un teléfono válido (8 dígitos)</div>
+                            </div>
+
+                            <!-- Estado Activo -->
+                            <div class="col-12">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="inputActivo" checked>
+                                    <label class="form-check-label" for="inputActivo">
+                                        Usuario activo
+                                    </label>
+                                </div>
+                                <small class="form-text text-muted">
+                                    Los usuarios inactivos no podrán iniciar sesión en el sistema
+                                </small>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-circle me-2"></i>Cancelar
+                    </button>
+                    <button type="button" class="btn btn-primary" id="btnGuardarUsuario">
+                        <i class="bi bi-check-circle me-2"></i>Guardar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Detalle Usuario -->
+    <div class="modal fade" id="modalDetalleUsuario" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-info text-white">
+                    <h5 class="modal-title">
+                        <i class="bi bi-info-circle me-2"></i>Detalle del Usuario
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Nombre:</label>
+                            <p class="form-control-plaintext" id="detalleNombre">-</p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Email:</label>
+                            <p class="form-control-plaintext" id="detalleEmail">-</p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Rol:</label>
+                            <p class="form-control-plaintext" id="detalleRol">-</p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Sucursal:</label>
+                            <p class="form-control-plaintext" id="detalleSucursal">-</p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Teléfono:</label>
+                            <p class="form-control-plaintext" id="detalleTelefono">-</p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Estado:</label>
+                            <p class="form-control-plaintext">
+                                <span id="detalleEstado" class="badge">-</span>
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Fecha de Creación:</label>
+                            <p class="form-control-plaintext" id="detalleFechaCreacion">-</p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Última Modificación:</label>
+                            <p class="form-control-plaintext" id="detalleUltimaModificacion">-</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-circle me-2"></i>Cerrar
+                    </button>
+                    <button type="button" class="btn btn-primary" id="btnEditarDesdeDetalle"
+                            data-permission="canManageUsers">
+                        <i class="bi bi-pencil me-2"></i>Editar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Cambiar Contraseña -->
+    <div class="modal fade" id="modalPassword" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-warning text-dark">
+                    <h5 class="modal-title">
+                        <i class="bi bi-key me-2"></i>Cambiar Contraseña
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle me-2"></i>
+                        Cambiando contraseña para: <strong id="passwordUsuarioNombre"></strong>
+                    </div>
+                    <form id="formPassword" novalidate>
+                        <div class="mb-3">
+                            <label for="inputNuevaPassword" class="form-label">
+                                Nueva Contraseña <span class="text-danger">*</span>
+                            </label>
+                            <input type="password" class="form-control" id="inputNuevaPassword" required
+                                placeholder="Mínimo 6 caracteres">
+                            <div class="invalid-feedback">La contraseña debe tener al menos 6 caracteres</div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="inputConfirmarPassword" class="form-label">
+                                Confirmar Contraseña <span class="text-danger">*</span>
+                            </label>
+                            <input type="password" class="form-control" id="inputConfirmarPassword" required
+                                placeholder="Repita la contraseña">
+                            <div class="invalid-feedback">Las contraseñas deben coincidir</div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-circle me-2"></i>Cancelar
+                    </button>
+                    <button type="button" class="btn btn-warning" id="btnGuardarPassword">
+                        <i class="bi bi-check-circle me-2"></i>Cambiar Contraseña
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Axios -->
+    <script src="https://cdn.jsdelivr.net/npm/axios@1.6.2/dist/axios.min.js"></script>
+
+    <!-- Configuración de API -->
+    <script src="../../config/api.js"></script>
+
+    <!-- Utilidades -->
+    <script src="../../utils/storage.js"></script>
+    <script src="../../utils/permissions.js"></script>
+    <script src="../../utils/alerts.js"></script>
+    <script src="../../utils/loader.js"></script>
+
+    <!-- Servicios -->
+    <script src="../../services/auth.service.js"></script>
+    <script src="../../services/usuarios.service.js"></script>
+
+    <!-- Controlador -->
+    <script src="../../controllers/usuarios.controller.js"></script>
+
+    <!-- App principal -->
+    <script src="../../assets/js/app.js"></script>
+</body>
+
+</html>
