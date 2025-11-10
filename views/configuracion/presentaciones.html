@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Presentaciones - Sistema de Pinturas</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+
+    <!-- Estilos personalizados -->
+    <link href="../../assets/css/style.css" rel="stylesheet">
+</head>
+
+<body>
+    <div class="main-wrapper">
+        <!-- Sidebar -->
+        <div id="sidebar-container"></div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Navbar -->
+            <div id="navbar-container"></div>
+
+            <!-- Content -->
+            <div class="content-wrapper">
+                <!-- Page Header -->
+                <div class="page-header">
+                    <h1 class="page-title">
+                        <i class="bi bi-box-seam-fill me-2"></i>Gestión de Presentaciones
+                    </h1>
+                    <div class="page-breadcrumb">
+                        <i class="bi bi-house-door"></i>
+                        <span>Inicio</span>
+                        <i class="bi bi-chevron-right"></i>
+                        <a href="/views/configuracion/general.html">Configuración</a>
+                        <i class="bi bi-chevron-right"></i>
+                        <span>Presentaciones</span>
+                    </div>
+                </div>
+
+                <!-- Acciones y Filtros -->
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="bi bi-search"></i>
+                                    </span>
+                                    <input type="text" class="form-control" id="searchInput" placeholder="Buscar presentación...">
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="form-check mt-2">
+                                    <input class="form-check-input" type="checkbox" id="includeInactive" onchange="PresentacionesController.loadPresentaciones()">
+                                    <label class="form-check-label" for="includeInactive">
+                                        Incluir inactivas
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-md-3 text-end">
+                                <button class="btn btn-primary" onclick="PresentacionesController.openCreateModal()">
+                                    <i class="bi bi-plus-circle me-2"></i>Nueva Presentación
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tabla de Presentaciones -->
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Nombre</th>
+                                        <th>Unidad</th>
+                                        <th>Descripción</th>
+                                        <th class="text-center">Estado</th>
+                                        <th class="text-center">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="presentacionesTableBody">
+                                    <tr>
+                                        <td colspan="6" class="text-center">
+                                            <div class="spinner-border text-primary" role="status">
+                                                <span class="visually-hidden">Cargando...</span>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Crear/Editar Presentación -->
+    <div class="modal fade" id="modalPresentacion" tabindex="-1" data-bs-backdrop="static">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalTitle">
+                        <i class="bi bi-box-seam me-2"></i><span id="modalTitleText">Nueva Presentación</span>
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formPresentacion" novalidate>
+                        <input type="hidden" id="presentacion_id">
+
+                        <div class="mb-3">
+                            <label class="form-label">Nombre *</label>
+                            <input type="text" class="form-control" id="presentacion_nombre" required placeholder="Ej: Galón, Litro, 1/4, etc.">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Unidad de Medida</label>
+                            <input type="text" class="form-control" id="presentacion_unidad" placeholder="Ej: GAL, L, 1/4">
+                            <small class="text-muted">Abreviatura o código de la unidad</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Descripción</label>
+                            <textarea class="form-control" id="presentacion_descripcion" rows="2"></textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="presentacion_activo" checked>
+                                <label class="form-check-label" for="presentacion_activo">
+                                    Activa
+                                </label>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-circle me-2"></i>Cancelar
+                    </button>
+                    <button type="button" class="btn btn-primary" id="btnGuardar" onclick="PresentacionesController.save()">
+                        <i class="bi bi-check-circle me-2"></i>Guardar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Axios -->
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+    <!-- Utilities -->
+    <script src="../../utils/storage.js"></script>
+    <script src="../../utils/alerts.js"></script>
+    <script src="../../utils/loader.js"></script>
+
+    <!-- Config -->
+    <script src="../../config/api.js"></script>
+
+    <!-- Services -->
+    <script src="../../services/auth.service.js"></script>
+    <script src="../../services/configuracion.service.js"></script>
+
+    <!-- Layout -->
+    <script src="../../utils/layout.js"></script>
+
+    <!-- Controller -->
+    <script>
+        const PresentacionesController = {
+            presentaciones: [],
+            modal: null,
+            isEditMode: false,
+            currentId: null,
+
+            async init() {
+                if (!AuthService.requireAuth()) {
+                    return;
+                }
+
+                await loadLayout();
+                this.modal = new bootstrap.Modal(document.getElementById('modalPresentacion'));
+                this.setupEventListeners();
+                await this.loadPresentaciones();
+            },
+
+            setupEventListeners() {
+                // Búsqueda
+                document.getElementById('searchInput').addEventListener('input', (e) => {
+                    this.filterPresentaciones(e.target.value);
+                });
+
+                // Form submit
+                document.getElementById('formPresentacion').addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.save();
+                });
+            },
+
+            async loadPresentaciones() {
+                try {
+                    Loader.show('Cargando presentaciones...');
+
+                    const includeInactive = document.getElementById('includeInactive').checked;
+                    const response = await ConfiguracionService.getPresentaciones(includeInactive);
+                    this.presentaciones = response.data || [];
+
+                    this.renderTable();
+                    Loader.hide();
+                } catch (error) {
+                    Loader.hide();
+                    console.error('Error cargando presentaciones:', error);
+                    Alerts.error('Error al cargar las presentaciones');
+                }
+            },
+
+            renderTable() {
+                const tbody = document.getElementById('presentacionesTableBody');
+
+                if (this.presentaciones.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="6" class="text-center text-muted">
+                                No hay presentaciones registradas
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+
+                tbody.innerHTML = this.presentaciones.map(pres => `
+                    <tr>
+                        <td>${pres.id}</td>
+                        <td><strong>${pres.nombre}</strong></td>
+                        <td>${pres.unidad || '-'}</td>
+                        <td>${pres.descripcion || '-'}</td>
+                        <td class="text-center">
+                            <span class="badge ${pres.activo ? 'bg-success' : 'bg-danger'}">
+                                ${pres.activo ? 'Activa' : 'Inactiva'}
+                            </span>
+                        </td>
+                        <td class="text-center">
+                            <button class="btn btn-sm btn-warning" onclick="PresentacionesController.openEditModal(${pres.id})" title="Editar">
+                                <i class="bi bi-pencil"></i>
+                            </button>
+                            ${pres.activo ? `
+                                <button class="btn btn-sm btn-secondary" onclick="PresentacionesController.toggleEstado(${pres.id}, false)" title="Desactivar">
+                                    <i class="bi bi-toggle-off"></i>
+                                </button>
+                            ` : `
+                                <button class="btn btn-sm btn-success" onclick="PresentacionesController.toggleEstado(${pres.id}, true)" title="Activar">
+                                    <i class="bi bi-toggle-on"></i>
+                                </button>
+                            `}
+                            <button class="btn btn-sm btn-danger" onclick="PresentacionesController.confirmDelete(${pres.id})" title="Eliminar">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `).join('');
+            },
+
+            filterPresentaciones(searchTerm) {
+                const filtered = this.presentaciones.filter(pres =>
+                    pres.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                    (pres.unidad && pres.unidad.toLowerCase().includes(searchTerm.toLowerCase())) ||
+                    (pres.descripcion && pres.descripcion.toLowerCase().includes(searchTerm.toLowerCase()))
+                );
+
+                const tbody = document.getElementById('presentacionesTableBody');
+                tbody.innerHTML = filtered.map(pres => `
+                    <tr>
+                        <td>${pres.id}</td>
+                        <td><strong>${pres.nombre}</strong></td>
+                        <td>${pres.unidad || '-'}</td>
+                        <td>${pres.descripcion || '-'}</td>
+                        <td class="text-center">
+                            <span class="badge ${pres.activo ? 'bg-success' : 'bg-danger'}">
+                                ${pres.activo ? 'Activa' : 'Inactiva'}
+                            </span>
+                        </td>
+                        <td class="text-center">
+                            <button class="btn btn-sm btn-warning" onclick="PresentacionesController.openEditModal(${pres.id})" title="Editar">
+                                <i class="bi bi-pencil"></i>
+                            </button>
+                            ${pres.activo ? `
+                                <button class="btn btn-sm btn-secondary" onclick="PresentacionesController.toggleEstado(${pres.id}, false)" title="Desactivar">
+                                    <i class="bi bi-toggle-off"></i>
+                                </button>
+                            ` : `
+                                <button class="btn btn-sm btn-success" onclick="PresentacionesController.toggleEstado(${pres.id}, true)" title="Activar">
+                                    <i class="bi bi-toggle-on"></i>
+                                </button>
+                            `}
+                            <button class="btn btn-sm btn-danger" onclick="PresentacionesController.confirmDelete(${pres.id})" title="Eliminar">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `).join('');
+            },
+
+            openCreateModal() {
+                this.isEditMode = false;
+                this.currentId = null;
+
+                document.getElementById('modalTitleText').textContent = 'Nueva Presentación';
+                document.getElementById('formPresentacion').reset();
+                document.getElementById('presentacion_id').value = '';
+                document.getElementById('presentacion_activo').checked = true;
+
+                this.modal.show();
+            },
+
+            async openEditModal(id) {
+                try {
+                    this.isEditMode = true;
+                    this.currentId = id;
+
+                    Loader.show('Cargando datos...');
+
+                    const response = await ConfiguracionService.getPresentacionById(id);
+                    const presentacion = response.data;
+
+                    document.getElementById('modalTitleText').textContent = 'Editar Presentación';
+                    document.getElementById('presentacion_id').value = presentacion.id;
+                    document.getElementById('presentacion_nombre').value = presentacion.nombre;
+                    document.getElementById('presentacion_unidad').value = presentacion.unidad || '';
+                    document.getElementById('presentacion_descripcion').value = presentacion.descripcion || '';
+                    document.getElementById('presentacion_activo').checked = presentacion.activo;
+
+                    Loader.hide();
+                    this.modal.show();
+                } catch (error) {
+                    Loader.hide();
+                    console.error('Error cargando presentación:', error);
+                    Alerts.error('Error al cargar los datos');
+                }
+            },
+
+            async save() {
+                try {
+                    const form = document.getElementById('formPresentacion');
+                    if (!form.checkValidity()) {
+                        form.classList.add('was-validated');
+                        return;
+                    }
+
+                    const data = {
+                        nombre: document.getElementById('presentacion_nombre').value,
+                        unidad: document.getElementById('presentacion_unidad').value || null,
+                        descripcion: document.getElementById('presentacion_descripcion').value || null,
+                        activo: document.getElementById('presentacion_activo').checked
+                    };
+
+                    const btnGuardar = document.getElementById('btnGuardar');
+                    Loader.showInButton(btnGuardar, 'Guardando...');
+
+                    let response;
+                    if (this.isEditMode) {
+                        response = await ConfiguracionService.updatePresentacion(this.currentId, data);
+                    } else {
+                        response = await ConfiguracionService.createPresentacion(data);
+                    }
+
+                    Loader.hideInButton(btnGuardar);
+                    Alerts.success(response.message || 'Presentación guardada correctamente');
+
+                    this.modal.hide();
+                    await this.loadPresentaciones();
+
+                } catch (error) {
+                    const btnGuardar = document.getElementById('btnGuardar');
+                    Loader.hideInButton(btnGuardar);
+                    console.error('Error guardando presentación:', error);
+                    Alerts.error(error.message || 'Error al guardar la presentación');
+                }
+            },
+
+            async toggleEstado(id, activar) {
+                try {
+                    Loader.show(activar ? 'Activando...' : 'Desactivando...');
+
+                    if (activar) {
+                        await ConfiguracionService.reactivarPresentacion(id);
+                    } else {
+                        await ConfiguracionService.deletePresentacion(id);
+                    }
+
+                    Loader.hide();
+                    Alerts.success(`Presentación ${activar ? 'activada' : 'desactivada'} correctamente`);
+
+                    await this.loadPresentaciones();
+                } catch (error) {
+                    Loader.hide();
+                    console.error('Error cambiando estado:', error);
+                    Alerts.error(error.message || 'Error al cambiar el estado');
+                }
+            },
+
+            confirmDelete(id) {
+                const presentacion = this.presentaciones.find(p => p.id === id);
+                Alerts.confirm(
+                    `¿Estás seguro de eliminar la presentación "${presentacion.nombre}"?`,
+                    'Eliminar Presentación',
+                    () => this.delete(id)
+                );
+            },
+
+            async delete(id) {
+                try {
+                    Loader.show('Eliminando...');
+
+                    await ConfiguracionService.deletePresentacion(id);
+
+                    Loader.hide();
+                    Alerts.success('Presentación eliminada correctamente');
+
+                    await this.loadPresentaciones();
+                } catch (error) {
+                    Loader.hide();
+                    console.error('Error eliminando presentación:', error);
+                    Alerts.error(error.message || 'Error al eliminar la presentación');
+                }
+            }
+        };
+
+        // Inicializar
+        document.addEventListener('DOMContentLoaded', () => {
+            PresentacionesController.init();
+        });
+    </script>
+</body>
+</html>

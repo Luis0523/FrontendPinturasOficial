@@ -32,10 +32,12 @@ const AuthService = {
             return response.data;
         } catch (error) {
             // Aunque falle el logout en el servidor, limpiamos localmente
-            throw this.handleError(error);
+            console.error('Error al hacer logout en el servidor:', error);
         } finally {
-            // Limpiar storage local siempre
+            // Limpiar storage local SIEMPRE
             Storage.clear();
+            // Redirigir al login
+            window.location.href = '/views/auth/login.html';
         }
     },
 

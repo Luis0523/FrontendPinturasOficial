@@ -1,0 +1,645 @@
+/**
+ * =====================================================
+ * CATÁLOGO CONTROLLER - VISTA PÚBLICA
+ * =====================================================
+ * Controller para manejar el catálogo público de productos
+ *
+ * Funcionalidades:
+ * - Carga de inventario por sucursal
+ * - Carrito de compras del cliente
+ * - Búsqueda de productos
+ * - Finalización de compra
+ * =====================================================
+ */
+
+const CatalogoController = {
+    // ==================== ESTADO ====================
+    estado: {
+        sucursalSeleccionada: null,
+        inventario: [],
+        inventarioFiltrado: [],
+        carrito: [],
+        terminoBusqueda: ''
+    },
+
+    // ==================== INICIALIZACIÓN ====================
+
+    /**
+     * Inicializar el catálogo
+     */
+    async init() {
+        try {
+            console.log('=€ Inicializando Catálogo Público...');
+
+            // Cargar sucursales
+            await this.cargarSucursales();
+
+            // Configurar eventos
+            this.configurarEventos();
+
+            // Cargar carrito desde localStorage si existe
+            this.cargarCarritoLocal();
+
+            console.log(' Catálogo inicializado correctamente');
+        } catch (error) {
+            console.error('L Error al inicializar catálogo:', error);
+            this.mostrarError('Error al inicializar el catálogo');
+        }
+    },
+
+    // ==================== SUCURSALES ====================
+
+    /**
+     * Cargar sucursales disponibles
+     */
+    async cargarSucursales() {
+        try {
+            const response = await SucursalesService.getSucursales();
+
+            if (response.success && response.data) {
+                const select = document.getElementById('selectSucursal');
+                select.innerHTML = '<option value="" selected disabled>-- Seleccione una sucursal --</option>';
+
+                response.data.forEach(sucursal => {
+                    const option = document.createElement('option');
+                    option.value = sucursal.id;
+                    option.textContent = sucursal.nombre;
+                    select.appendChild(option);
+                });
+            }
+        } catch (error) {
+            console.error('Error al cargar sucursales:', error);
+            this.mostrarError('Error al cargar las sucursales');
+        }
+    },
+
+    /**
+     * Manejar cambio de sucursal
+     */
+    async onSucursalChange(sucursalId) {
+        try {
+            if (!sucursalId) return;
+
+            // Limpiar carrito si había productos de otra sucursal
+            if (this.estado.sucursalSeleccionada && this.estado.sucursalSeleccionada.id !== parseInt(sucursalId)) {
+                if (this.estado.carrito.length > 0) {
+                    if (!confirm('Al cambiar de sucursal se limpiará el carrito. ¿Desea continuar?')) {
+                        // Revertir selección
+                        document.getElementById('selectSucursal').value = this.estado.sucursalSeleccionada.id;
+                        return;
+                    }
+                    this.limpiarCarrito();
+                }
+            }
+
+            // Mostrar loader
+            this.mostrarLoader();
+            document.getElementById('mensajeInicial').style.display = 'none';
+
+            // Habilitar búsqueda
+            document.getElementById('inputBuscarProducto').disabled = false;
+            document.getElementById('btnLimpiarBusqueda').disabled = false;
+
+            // Cargar inventario de la sucursal
+            const response = await InventarioService.getInventarioSucursal(sucursalId);
+
+            if (response.success && response.data) {
+                this.estado.sucursalSeleccionada = {
+                    id: parseInt(sucursalId),
+                    nombre: document.getElementById('selectSucursal').selectedOptions[0].text
+                };
+
+                this.estado.inventario = response.data;
+                this.estado.inventarioFiltrado = response.data;
+
+                // Actualizar estadísticas
+                this.actualizarEstadisticas();
+
+                // Renderizar productos
+                this.renderizarProductos();
+
+                // Mostrar estadísticas
+                document.getElementById('statsContainer').style.display = 'flex';
+
+                console.log(` Inventario cargado: ${response.data.length} productos`);
+            }
+        } catch (error) {
+            console.error('Error al cargar inventario:', error);
+            this.mostrarError('Error al cargar el inventario');
+        } finally {
+            this.ocultarLoader();
+        }
+    },
+
+    // ==================== PRODUCTOS ====================
+
+    /**
+     * Renderizar productos en el grid
+     */
+    renderizarProductos() {
+        const grid = document.getElementById('productosGrid');
+        grid.innerHTML = '';
+
+        if (this.estado.inventarioFiltrado.length === 0) {
+            grid.innerHTML = `
+                <div class="col-12 text-center py-5">
+                    <i class="bi bi-search" style="font-size: 5rem; color: var(--texto-claro);"></i>
+                    <h3 class="mt-3" style="color: var(--texto-medio);">No se encontraron productos</h3>
+                    <p style="color: var(--texto-claro);">Intenta con otros términos de búsqueda</p>
+                </div>
+            `;
+            return;
+        }
+
+        // Renderizar cada producto
+        this.estado.inventarioFiltrado.forEach(item => {
+            const card = this.crearCardProducto(item);
+            grid.appendChild(card);
+        });
+    },
+
+    /**
+     * Crear card de producto
+     */
+    crearCardProducto(item) {
+        const col = document.createElement('div');
+        col.className = 'col-md-6 col-lg-4 col-xl-3';
+
+        const producto = item.productoPresentacion?.producto || {};
+        const presentacion = item.productoPresentacion?.presentacion || {};
+
+        // Determinar estado del stock
+        let badgeClass = 'disponible';
+        let badgeText = 'Disponible';
+        let btnDisabled = '';
+
+        if (item.existencia === 0) {
+            badgeClass = 'agotado';
+            badgeText = 'Agotado';
+            btnDisabled = 'disabled';
+        } else if (item.estado === 'BAJO') {
+            badgeClass = 'stock-bajo';
+            badgeText = 'Stock Bajo';
+        }
+
+        col.innerHTML = `
+            <div class="producto-card">
+                <div class="position-relative">
+                    <div class="producto-imagen d-flex align-items-center justify-content-center">
+                        <i class="bi bi-paint-bucket" style="font-size: 4rem; color: var(--rojo-principal); opacity: 0.3;"></i>
+                    </div>
+                    <span class="producto-badge ${badgeClass}">${badgeText}</span>
+                </div>
+                <div class="card-body">
+                    <small class="text-muted d-block mb-1">
+                        <i class="bi bi-upc"></i> ${producto.codigo_sku || 'N/A'}
+                    </small>
+                    <h5 class="producto-title">${producto.descripcion || 'Producto'}</h5>
+                    <p class="producto-descripcion mb-2">
+                        <strong>${presentacion.nombre || 'N/A'}</strong>
+                        ${producto.color ? `<br><small><i class="bi bi-palette"></i> ${producto.color}</small>` : ''}
+                    </p>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <small class="text-muted">
+                            <i class="bi bi-box-seam"></i> Stock: <strong>${item.existencia}</strong>
+                        </small>
+                    </div>
+                    <button
+                        class="btn btn-agregar"
+                        onclick="CatalogoController.agregarAlCarrito(${item.producto_presentacion_id})"
+                        ${btnDisabled}
+                    >
+                        <i class="bi bi-cart-plus"></i> Agregar al Carrito
+                    </button>
+                </div>
+            </div>
+        `;
+
+        return col;
+    },
+
+    /**
+     * Buscar productos
+     */
+    buscarProductos(termino) {
+        this.estado.terminoBusqueda = termino.toLowerCase();
+
+        if (!termino) {
+            this.estado.inventarioFiltrado = this.estado.inventario;
+        } else {
+            this.estado.inventarioFiltrado = this.estado.inventario.filter(item => {
+                const producto = item.productoPresentacion?.producto || {};
+                const presentacion = item.productoPresentacion?.presentacion || {};
+
+                return (
+                    producto.codigo_sku?.toLowerCase().includes(termino) ||
+                    producto.descripcion?.toLowerCase().includes(termino) ||
+                    producto.color?.toLowerCase().includes(termino) ||
+                    presentacion.nombre?.toLowerCase().includes(termino)
+                );
+            });
+        }
+
+        this.renderizarProductos();
+        this.actualizarEstadisticas();
+    },
+
+    /**
+     * Actualizar estadísticas del inventario
+     */
+    actualizarEstadisticas() {
+        const inventario = this.estado.inventarioFiltrado;
+
+        const disponibles = inventario.filter(i => i.existencia > 0).length;
+        const stockBajo = inventario.filter(i => i.estado === 'BAJO').length;
+        const agotados = inventario.filter(i => i.existencia === 0).length;
+
+        document.getElementById('statsProductosDisponibles').textContent = disponibles;
+        document.getElementById('statsStockBajo').textContent = stockBajo;
+        document.getElementById('statsAgotados').textContent = agotados;
+    },
+
+    // ==================== CARRITO ====================
+
+    /**
+     * Agregar producto al carrito
+     */
+    async agregarAlCarrito(productoPresentacionId) {
+        try {
+            // Buscar el producto en el inventario
+            const itemInventario = this.estado.inventario.find(
+                i => i.producto_presentacion_id === productoPresentacionId
+            );
+
+            if (!itemInventario) {
+                this.mostrarError('Producto no encontrado');
+                return;
+            }
+
+            // Verificar stock disponible
+            if (itemInventario.existencia <= 0) {
+                this.mostrarError('Producto sin stock disponible');
+                return;
+            }
+
+            // Verificar si ya está en el carrito
+            const itemCarrito = this.estado.carrito.find(
+                i => i.producto_presentacion_id === productoPresentacionId
+            );
+
+            if (itemCarrito) {
+                // Verificar si hay stock suficiente
+                if (itemCarrito.cantidad >= itemInventario.existencia) {
+                    this.mostrarError('No hay suficiente stock disponible');
+                    return;
+                }
+
+                // Incrementar cantidad
+                itemCarrito.cantidad++;
+                itemCarrito.subtotal = itemCarrito.cantidad * itemCarrito.precio_unitario;
+            } else {
+                // Obtener precio vigente
+                const responsePrecio = await PreciosService.getPrecioVigente(
+                    productoPresentacionId,
+                    this.estado.sucursalSeleccionada.id
+                );
+
+                if (!responsePrecio.success || !responsePrecio.data) {
+                    this.mostrarError('No se pudo obtener el precio del producto');
+                    return;
+                }
+
+                const precio = responsePrecio.data.precio_venta || 0;
+
+                // Crear nuevo item en el carrito
+                const producto = itemInventario.productoPresentacion?.producto || {};
+                const presentacion = itemInventario.productoPresentacion?.presentacion || {};
+
+                this.estado.carrito.push({
+                    producto_presentacion_id: productoPresentacionId,
+                    codigo_sku: producto.codigo_sku,
+                    nombre_completo: `${producto.descripcion} - ${presentacion.nombre}`,
+                    cantidad: 1,
+                    precio_unitario: parseFloat(precio),
+                    stock_disponible: itemInventario.existencia,
+                    subtotal: parseFloat(precio)
+                });
+            }
+
+            // Actualizar vista del carrito
+            this.renderizarCarrito();
+            this.calcularTotales();
+            this.guardarCarritoLocal();
+
+            // Feedback visual
+            this.mostrarExito('Producto agregado al carrito');
+
+        } catch (error) {
+            console.error('Error al agregar al carrito:', error);
+            this.mostrarError('Error al agregar el producto');
+        }
+    },
+
+    /**
+     * Renderizar carrito
+     */
+    renderizarCarrito() {
+        const container = document.getElementById('carritoItems');
+        const carritoCount = document.getElementById('carritoCount');
+        const carritoBadge = document.getElementById('carritoBadge');
+        const carritoItemsCount = document.getElementById('carritoItemsCount');
+        const carritoVacio = document.getElementById('carritoVacio');
+        const btnFinalizar = document.getElementById('btnFinalizarCompra');
+
+        // Actualizar contadores
+        const totalItems = this.estado.carrito.length;
+        carritoCount.textContent = totalItems;
+        carritoBadge.textContent = totalItems;
+        carritoItemsCount.textContent = totalItems;
+
+        // Si el carrito está vacío
+        if (totalItems === 0) {
+            carritoVacio.style.display = 'block';
+            container.innerHTML = '';
+            btnFinalizar.disabled = true;
+            return;
+        }
+
+        // Si el carrito tiene items
+        carritoVacio.style.display = 'none';
+        btnFinalizar.disabled = false;
+
+        container.innerHTML = '';
+
+        this.estado.carrito.forEach((item, index) => {
+            const itemDiv = document.createElement('div');
+            itemDiv.className = 'carrito-item';
+            itemDiv.innerHTML = `
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <div class="flex-grow-1">
+                        <h6 class="mb-1" style="font-size: 0.95rem; font-weight: 600; color: var(--rojo-oscuro);">
+                            ${item.nombre_completo}
+                        </h6>
+                        <small class="text-muted">${item.codigo_sku}</small>
+                    </div>
+                    <button
+                        class="btn btn-sm btn-link text-danger p-0 ms-2"
+                        onclick="CatalogoController.eliminarDelCarrito(${index})"
+                        title="Eliminar"
+                    >
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </div>
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="btn-group btn-group-sm" role="group">
+                        <button
+                            type="button"
+                            class="btn btn-outline-secondary"
+                            onclick="CatalogoController.decrementarCantidad(${index})"
+                        >
+                            <i class="bi bi-dash"></i>
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary" disabled style="min-width: 50px;">
+                            ${item.cantidad}
+                        </button>
+                        <button
+                            type="button"
+                            class="btn btn-outline-secondary"
+                            onclick="CatalogoController.incrementarCantidad(${index})"
+                        >
+                            <i class="bi bi-plus"></i>
+                        </button>
+                    </div>
+                    <div class="text-end">
+                        <div style="font-size: 0.85rem; color: var(--texto-medio);">
+                            Q${this.formatearMoneda(item.precio_unitario)} c/u
+                        </div>
+                        <div style="font-size: 1.1rem; font-weight: 700; color: var(--rojo-principal);">
+                            Q${this.formatearMoneda(item.subtotal)}
+                        </div>
+                    </div>
+                </div>
+            `;
+            container.appendChild(itemDiv);
+        });
+    },
+
+    /**
+     * Incrementar cantidad
+     */
+    incrementarCantidad(index) {
+        const item = this.estado.carrito[index];
+
+        if (item.cantidad >= item.stock_disponible) {
+            this.mostrarError('No hay más stock disponible');
+            return;
+        }
+
+        item.cantidad++;
+        item.subtotal = item.cantidad * item.precio_unitario;
+
+        this.renderizarCarrito();
+        this.calcularTotales();
+        this.guardarCarritoLocal();
+    },
+
+    /**
+     * Decrementar cantidad
+     */
+    decrementarCantidad(index) {
+        const item = this.estado.carrito[index];
+
+        if (item.cantidad <= 1) {
+            this.eliminarDelCarrito(index);
+            return;
+        }
+
+        item.cantidad--;
+        item.subtotal = item.cantidad * item.precio_unitario;
+
+        this.renderizarCarrito();
+        this.calcularTotales();
+        this.guardarCarritoLocal();
+    },
+
+    /**
+     * Eliminar item del carrito
+     */
+    eliminarDelCarrito(index) {
+        this.estado.carrito.splice(index, 1);
+        this.renderizarCarrito();
+        this.calcularTotales();
+        this.guardarCarritoLocal();
+    },
+
+    /**
+     * Limpiar carrito completo
+     */
+    limpiarCarrito() {
+        if (this.estado.carrito.length === 0) return;
+
+        if (confirm('¿Está seguro de vaciar el carrito?')) {
+            this.estado.carrito = [];
+            this.renderizarCarrito();
+            this.calcularTotales();
+            this.guardarCarritoLocal();
+            this.mostrarExito('Carrito vaciado');
+        }
+    },
+
+    /**
+     * Calcular totales
+     */
+    calcularTotales() {
+        const subtotal = this.estado.carrito.reduce((sum, item) => sum + item.subtotal, 0);
+        const total = subtotal;
+
+        document.getElementById('subtotal').textContent = this.formatearMoneda(subtotal);
+        document.getElementById('total').textContent = this.formatearMoneda(total);
+    },
+
+    /**
+     * Finalizar compra - Alerta de que deben contactarse
+     */
+    finalizarCompra() {
+        if (this.estado.carrito.length === 0) {
+            this.mostrarError('El carrito está vacío');
+            return;
+        }
+
+        // Calcular total
+        const total = this.estado.carrito.reduce((sum, item) => sum + item.subtotal, 0);
+
+        // Crear mensaje con los productos
+        let mensaje = 'Hola, me interesa realizar una compra:\\n\\n';
+
+        this.estado.carrito.forEach(item => {
+            mensaje += `" ${item.nombre_completo} - Cantidad: ${item.cantidad} - Q${this.formatearMoneda(item.subtotal)}\\n`;
+        });
+
+        mensaje += `\\nTotal: Q${this.formatearMoneda(total)}\\n`;
+        mensaje += `Sucursal: ${this.estado.sucursalSeleccionada.nombre}`;
+
+        // Número de WhatsApp (reemplaza con el número real)
+        const numeroWhatsApp = '50212345678'; // Cambiar por el número real
+
+        const url = `https://wa.me/${numeroWhatsApp}?text=${encodeURIComponent(mensaje)}`;
+
+        // Abrir WhatsApp en nueva ventana
+        window.open(url, '_blank');
+    },
+
+    // ==================== LOCAL STORAGE ====================
+
+    /**
+     * Guardar carrito en localStorage
+     */
+    guardarCarritoLocal() {
+        localStorage.setItem('carrito', JSON.stringify(this.estado.carrito));
+        localStorage.setItem('sucursal', JSON.stringify(this.estado.sucursalSeleccionada));
+    },
+
+    /**
+     * Cargar carrito desde localStorage
+     */
+    cargarCarritoLocal() {
+        const carritoGuardado = localStorage.getItem('carrito');
+        const sucursalGuardada = localStorage.getItem('sucursal');
+
+        if (carritoGuardado) {
+            this.estado.carrito = JSON.parse(carritoGuardado);
+            this.renderizarCarrito();
+            this.calcularTotales();
+        }
+
+        if (sucursalGuardada) {
+            this.estado.sucursalSeleccionada = JSON.parse(sucursalGuardada);
+        }
+    },
+
+    // ==================== EVENTOS ====================
+
+    /**
+     * Configurar todos los eventos
+     */
+    configurarEventos() {
+        // Sucursal
+        document.getElementById('selectSucursal').addEventListener('change', (e) => {
+            this.onSucursalChange(e.target.value);
+        });
+
+        // Búsqueda de productos
+        document.getElementById('inputBuscarProducto').addEventListener('input', (e) => {
+            this.buscarProductos(e.target.value);
+        });
+
+        document.getElementById('btnLimpiarBusqueda').addEventListener('click', () => {
+            document.getElementById('inputBuscarProducto').value = '';
+            this.buscarProductos('');
+        });
+
+        // Carrito
+        document.getElementById('btnLimpiarCarrito').addEventListener('click', () => {
+            this.limpiarCarrito();
+        });
+
+        document.getElementById('btnFinalizarCompra').addEventListener('click', () => {
+            this.finalizarCompra();
+        });
+    },
+
+    // ==================== UTILIDADES ====================
+
+    /**
+     * Mostrar loader
+     */
+    mostrarLoader() {
+        document.getElementById('productosLoader').style.display = 'flex';
+        document.getElementById('productosGrid').style.display = 'none';
+    },
+
+    /**
+     * Ocultar loader
+     */
+    ocultarLoader() {
+        document.getElementById('productosLoader').style.display = 'none';
+        document.getElementById('productosGrid').style.display = 'block';
+    },
+
+    /**
+     * Formatear moneda
+     */
+    formatearMoneda(monto) {
+        return parseFloat(monto || 0).toFixed(2);
+    },
+
+    /**
+     * Mostrar mensaje de éxito
+     */
+    mostrarExito(mensaje) {
+        console.log('', mensaje);
+        // TODO: Implementar toast notification
+    },
+
+    /**
+     * Mostrar mensaje de error
+     */
+    mostrarError(mensaje) {
+        console.error('L', mensaje);
+        alert(mensaje);
+    }
+};
+
+// ==================== INICIALIZACIÓN ====================
+
+// Inicializar cuando el DOM esté listo
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+        CatalogoController.init();
+    });
+} else {
+    CatalogoController.init();
+}
+
+// Hacer disponible globalmente
+window.CatalogoController = CatalogoController;

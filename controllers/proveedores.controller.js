@@ -37,6 +37,11 @@ const ProveedoresController = {
             return;
         }
 
+        // Verificar permisos
+        if (!requirePermission(Permissions.canViewProviders)) {
+            return; // El requirePermission ya redirige
+        }
+
         // Inicializar modals de Bootstrap
         const modalProveedorElement = document.getElementById('modalProveedor');
         const modalDetalleElement = document.getElementById('modalDetalleProveedor');

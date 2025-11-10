@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Categorías - Sistema de Pinturas</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+
+    <!-- Estilos personalizados -->
+    <link href="../../assets/css/style.css" rel="stylesheet">
+</head>
+
+<body>
+    <div class="main-wrapper">
+        <!-- Sidebar -->
+        <div id="sidebar-container"></div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Navbar -->
+            <div id="navbar-container"></div>
+
+            <!-- Content -->
+            <div class="content-wrapper">
+                <!-- Page Header -->
+                <div class="page-header">
+                    <h1 class="page-title">
+                        <i class="bi bi-tag-fill me-2"></i>Gestión de Categorías
+                    </h1>
+                    <div class="page-breadcrumb">
+                        <i class="bi bi-house-door"></i>
+                        <span>Inicio</span>
+                        <i class="bi bi-chevron-right"></i>
+                        <a href="/views/configuracion/general.html">Configuración</a>
+                        <i class="bi bi-chevron-right"></i>
+                        <span>Categorías</span>
+                    </div>
+                </div>
+
+                <!-- Acciones y Filtros -->
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-md-8">
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="bi bi-search"></i>
+                                    </span>
+                                    <input type="text" class="form-control" id="searchInput" placeholder="Buscar categoría...">
+                                </div>
+                            </div>
+                            <div class="col-md-4 text-end">
+                                <button class="btn btn-primary" onclick="CategoriasController.openCreateModal()">
+                                    <i class="bi bi-plus-circle me-2"></i>Nueva Categoría
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tabla de Categorías -->
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Nombre</th>
+                                        <th>Descripción</th>
+                                        <th class="text-center">Productos</th>
+                                        <th class="text-center">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="categoriasTableBody">
+                                    <tr>
+                                        <td colspan="5" class="text-center">
+                                            <div class="spinner-border text-primary" role="status">
+                                                <span class="visually-hidden">Cargando...</span>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Crear/Editar Categoría -->
+    <div class="modal fade" id="modalCategoria" tabindex="-1" data-bs-backdrop="static">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalTitle">
+                        <i class="bi bi-tag me-2"></i><span id="modalTitleText">Nueva Categoría</span>
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formCategoria" novalidate>
+                        <input type="hidden" id="categoria_id">
+
+                        <div class="mb-3">
+                            <label class="form-label">Nombre *</label>
+                            <input type="text" class="form-control" id="categoria_nombre" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Descripción</label>
+                            <textarea class="form-control" id="categoria_descripcion" rows="3"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-circle me-2"></i>Cancelar
+                    </button>
+                    <button type="button" class="btn btn-primary" id="btnGuardar" onclick="CategoriasController.save()">
+                        <i class="bi bi-check-circle me-2"></i>Guardar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Axios -->
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+    <!-- Utilities -->
+    <script src="../../utils/storage.js"></script>
+    <script src="../../utils/alerts.js"></script>
+    <script src="../../utils/loader.js"></script>
+
+    <!-- Config -->
+    <script src="../../config/api.js"></script>
+
+    <!-- Services -->
+    <script src="../../services/auth.service.js"></script>
+    <script src="../../services/configuracion.service.js"></script>
+
+    <!-- Layout -->
+    <script src="../../utils/layout.js"></script>
+
+    <!-- Controller -->
+    <script>
+        const CategoriasController = {
+            categorias: [],
+            modal: null,
+            isEditMode: false,
+            currentId: null,
+
+            async init() {
+                if (!AuthService.requireAuth()) {
+                    return;
+                }
+
+                await loadLayout();
+                this.modal = new bootstrap.Modal(document.getElementById('modalCategoria'));
+                this.setupEventListeners();
+                await this.loadCategorias();
+            },
+
+            setupEventListeners() {
+                // Búsqueda
+                document.getElementById('searchInput').addEventListener('input', (e) => {
+                    this.filterCategorias(e.target.value);
+                });
+
+                // Form submit
+                document.getElementById('formCategoria').addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.save();
+                });
+            },
+
+            async loadCategorias() {
+                try {
+                    Loader.show('Cargando categorías...');
+
+                    const response = await ConfiguracionService.getCategorias();
+                    this.categorias = response.data || [];
+
+                    this.renderTable();
+                    Loader.hide();
+                } catch (error) {
+                    Loader.hide();
+                    console.error('Error cargando categorías:', error);
+                    Alerts.error('Error al cargar las categorías');
+                }
+            },
+
+            renderTable() {
+                const tbody = document.getElementById('categoriasTableBody');
+
+                if (this.categorias.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="5" class="text-center text-muted">
+                                No hay categorías registradas
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+
+                tbody.innerHTML = this.categorias.map(cat => `
+                    <tr>
+                        <td>${cat.id}</td>
+                        <td><strong>${cat.nombre}</strong></td>
+                        <td>${cat.descripcion || '-'}</td>
+                        <td class="text-center">
+                            <span class="badge bg-info">${cat.productos_count || 0}</span>
+                        </td>
+                        <td class="text-center">
+                            <button class="btn btn-sm btn-warning" onclick="CategoriasController.openEditModal(${cat.id})" title="Editar">
+                                <i class="bi bi-pencil"></i>
+                            </button>
+                            <button class="btn btn-sm btn-danger" onclick="CategoriasController.confirmDelete(${cat.id})" title="Eliminar">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `).join('');
+            },
+
+            filterCategorias(searchTerm) {
+                const filtered = this.categorias.filter(cat =>
+                    cat.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                    (cat.descripcion && cat.descripcion.toLowerCase().includes(searchTerm.toLowerCase()))
+                );
+
+                const tbody = document.getElementById('categoriasTableBody');
+                tbody.innerHTML = filtered.map(cat => `
+                    <tr>
+                        <td>${cat.id}</td>
+                        <td><strong>${cat.nombre}</strong></td>
+                        <td>${cat.descripcion || '-'}</td>
+                        <td class="text-center">
+                            <span class="badge bg-info">${cat.productos_count || 0}</span>
+                        </td>
+                        <td class="text-center">
+                            <button class="btn btn-sm btn-warning" onclick="CategoriasController.openEditModal(${cat.id})" title="Editar">
+                                <i class="bi bi-pencil"></i>
+                            </button>
+                            <button class="btn btn-sm btn-danger" onclick="CategoriasController.confirmDelete(${cat.id})" title="Eliminar">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `).join('');
+            },
+
+            openCreateModal() {
+                this.isEditMode = false;
+                this.currentId = null;
+
+                document.getElementById('modalTitleText').textContent = 'Nueva Categoría';
+                document.getElementById('formCategoria').reset();
+                document.getElementById('categoria_id').value = '';
+
+                this.modal.show();
+            },
+
+            async openEditModal(id) {
+                try {
+                    this.isEditMode = true;
+                    this.currentId = id;
+
+                    Loader.show('Cargando datos...');
+
+                    const response = await ConfiguracionService.getCategoriaById(id);
+                    const categoria = response.data;
+
+                    document.getElementById('modalTitleText').textContent = 'Editar Categoría';
+                    document.getElementById('categoria_id').value = categoria.id;
+                    document.getElementById('categoria_nombre').value = categoria.nombre;
+                    document.getElementById('categoria_descripcion').value = categoria.descripcion || '';
+
+                    Loader.hide();
+                    this.modal.show();
+                } catch (error) {
+                    Loader.hide();
+                    console.error('Error cargando categoría:', error);
+                    Alerts.error('Error al cargar los datos');
+                }
+            },
+
+            async save() {
+                try {
+                    const form = document.getElementById('formCategoria');
+                    if (!form.checkValidity()) {
+                        form.classList.add('was-validated');
+                        return;
+                    }
+
+                    const data = {
+                        nombre: document.getElementById('categoria_nombre').value,
+                        descripcion: document.getElementById('categoria_descripcion').value || null
+                    };
+
+                    const btnGuardar = document.getElementById('btnGuardar');
+                    Loader.showInButton(btnGuardar, 'Guardando...');
+
+                    let response;
+                    if (this.isEditMode) {
+                        response = await ConfiguracionService.updateCategoria(this.currentId, data);
+                    } else {
+                        response = await ConfiguracionService.createCategoria(data);
+                    }
+
+                    Loader.hideInButton(btnGuardar);
+                    Alerts.success(response.message || 'Categoría guardada correctamente');
+
+                    this.modal.hide();
+                    await this.loadCategorias();
+
+                } catch (error) {
+                    const btnGuardar = document.getElementById('btnGuardar');
+                    Loader.hideInButton(btnGuardar);
+                    console.error('Error guardando categoría:', error);
+                    Alerts.error(error.message || 'Error al guardar la categoría');
+                }
+            },
+
+            confirmDelete(id) {
+                const categoria = this.categorias.find(c => c.id === id);
+                Alerts.confirm(
+                    `¿Estás seguro de eliminar la categoría "${categoria.nombre}"?`,
+                    'Eliminar Categoría',
+                    () => this.delete(id)
+                );
+            },
+
+            async delete(id) {
+                try {
+                    Loader.show('Eliminando...');
+
+                    await ConfiguracionService.deleteCategoria(id);
+
+                    Loader.hide();
+                    Alerts.success('Categoría eliminada correctamente');
+
+                    await this.loadCategorias();
+                } catch (error) {
+                    Loader.hide();
+                    console.error('Error eliminando categoría:', error);
+                    Alerts.error(error.message || 'Error al eliminar la categoría');
+                }
+            }
+        };
+
+        // Inicializar
+        document.addEventListener('DOMContentLoaded', () => {
+            CategoriasController.init();
+        });
+    </script>
+</body>
+</html>

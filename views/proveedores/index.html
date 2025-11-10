@@ -178,36 +178,21 @@
     <script src="../../utils/loader.js"></script>
     <script src="../../utils/permissions.js"></script>
 
+    <!-- App principal (contiene loadLayout y logout) -->
+    <script src="../../assets/js/app.js"></script>
+
     <!-- Controller -->
     <script src="../../controllers/proveedores.controller.js"></script>
 
-    <!-- Cargar componentes -->
+    <!-- Inicializar -->
     <script>
-        // Cargar Sidebar
-        fetch('../../components/sidebar.html')
-            .then(response => response.text())
-            .then(data => {
-                document.getElementById('sidebar-container').innerHTML = data;
-            });
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Cargar layout (navbar + sidebar)
+            await loadLayout();
 
-        // Cargar Navbar
-        fetch('../../components/navbar.html')
-            .then(response => response.text())
-            .then(data => {
-                document.getElementById('navbar-container').innerHTML = data;
-            });
-
-        // Cargar Modal de Proveedor
-        fetch('../../components/modals/modal-proveedor.html')
-            .then(response => response.text())
-            .then(data => {
-                document.getElementById('modal-proveedor-container').innerHTML = data;
-                // Inicializar controller después de cargar modal
-                if (typeof ProveedoresController !== 'undefined') {
-                    ProveedoresController.init();
-                }
-            });
+            // Inicializar controller
+            await ProveedoresController.init();
+        });
     </script>
 </body>
-
 </html>

@@ -26,6 +26,11 @@ const ComprasController = {
             return;
         }
 
+        // Verificar permisos
+        if (!requirePermission(Permissions.canCreatePurchaseOrders)) {
+            return; // El requirePermission ya redirige
+        }
+
         await loadLayout();
         await this.loadModals();
 
@@ -716,6 +721,11 @@ const ComprasController = {
         document.getElementById('recepcion_proveedor').textContent = orden.proveedor?.nombre || orden.Proveedor?.nombre || '-';
         document.getElementById('recepcion_observaciones').value = '';
 
+        // Generar opciones de sucursales
+        const sucursalesOptions = this.sucursales.map(s =>
+            `<option value="${s.id}" ${s.id === orden.sucursal_id ? 'selected' : ''}>${s.nombre}</option>`
+        ).join('');
+
         // Tabla de productos
         const tbody = document.getElementById('recepcionItemsBody');
         if (tbody && orden.detalles) {
@@ -735,9 +745,14 @@ const ComprasController = {
                         <td>${detalle.cantidad_recibida || 0}</td>
                         <td class="fw-bold text-warning">${pendiente}</td>
                         <td>
-                            <input type="number" 
-                                   class="form-control form-control-sm cantidad-recibir" 
-                                   min="0" 
+                            <select class="form-select form-select-sm sucursal-destino">
+                                ${sucursalesOptions}
+                            </select>
+                        </td>
+                        <td>
+                            <input type="number"
+                                   class="form-control form-control-sm cantidad-recibir"
+                                   min="0"
                                    max="${pendiente}"
                                    value="${pendiente}">
                         </td>
@@ -764,11 +779,13 @@ const ComprasController = {
             rows.forEach(row => {
                 const detalleOrdenId = parseInt(row.querySelector('.detalle-orden-id').value);
                 const cantidadRecibir = parseFloat(row.querySelector('.cantidad-recibir').value) || 0;
+                const sucursalId = parseInt(row.querySelector('.sucursal-destino').value);
 
                 if (cantidadRecibir > 0) {
                     items.push({
                         detalle_orden_id: detalleOrdenId,
-                        cantidad_recibida: cantidadRecibir
+                        cantidad_recibida: cantidadRecibir,
+                        sucursal_id: sucursalId
                     });
                 }
             });

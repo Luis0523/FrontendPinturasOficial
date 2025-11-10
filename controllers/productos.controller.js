@@ -31,10 +31,9 @@ const ProductosController = {
         }
 
         // Verificar permisos
-      /*  if (!Permissions.canViewProducts()) {
-            Permissions.redirectIfUnauthorized(() => false);
-            return;
-        }*/
+        if (!requirePermission(Permissions.canViewProducts)) {
+            return; // El requirePermission ya redirige
+        }
 
         // Cargar layout
         await loadLayout();

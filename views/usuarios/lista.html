@@ -69,11 +69,7 @@
                                 <label class="form-label fw-semibold">Rol</label>
                                 <select class="form-select" id="filterRol">
                                     <option value="">Todos los roles</option>
-                                    <option value="Administrador">Administrador</option>
-                                    <option value="Gerente">Gerente</option>
-                                    <option value="Bodeguero">Bodeguero</option>
-                                    <option value="Cajero">Cajero</option>
-                                    <option value="Vendedor">Vendedor</option>
+                                    <!-- Se llenará dinámicamente desde el backend -->
                                 </select>
                             </div>
 
@@ -111,13 +107,13 @@
                                 <thead class="table-light">
                                     <tr>
                                         <th width="5%">ID</th>
-                                        <th width="20%">Nombre</th>
-                                        <th width="20%">Email</th>
-                                        <th width="12%">Rol</th>
-                                        <th width="15%">Sucursal</th>
-                                        <th width="12%">Teléfono</th>
-                                        <th width="8%">Estado</th>
-                                        <th width="8%">Acciones</th>
+                                        <th width="18%">Nombre</th>
+                                        <th width="12%">DPI</th>
+                                        <th width="18%">Email</th>
+                                        <th width="10%">Rol</th>
+                                        <th width="12%">Sucursal</th>
+                                        <th width="10%">Estado</th>
+                                        <th width="15%">Acciones</th>
                                     </tr>
                                 </thead>
                                 <tbody id="usuariosTableBody">
@@ -179,6 +175,16 @@
                                 <div class="invalid-feedback">El nombre es requerido (mínimo 3 caracteres)</div>
                             </div>
 
+                            <!-- DPI -->
+                            <div class="col-md-6">
+                                <label for="inputDPI" class="form-label">
+                                    DPI <span class="text-danger">*</span>
+                                </label>
+                                <input type="text" class="form-control" id="inputDPI" required
+                                    placeholder="1234567890123" maxlength="13">
+                                <div class="invalid-feedback">El DPI es requerido</div>
+                            </div>
+
                             <!-- Email -->
                             <div class="col-md-6">
                                 <label for="inputEmail" class="form-label">
@@ -216,20 +222,14 @@
                             <!-- Sucursal -->
                             <div class="col-md-6">
                                 <label for="selectSucursal" class="form-label">
-                                    Sucursal <span class="text-danger">*</span>
+                                    Sucursal
                                 </label>
-                                <select class="form-select" id="selectSucursal" required>
-                                    <option value="">Seleccione una sucursal</option>
+                                <select class="form-select" id="selectSucursal">
+                                    <option value="">Sin sucursal asignada</option>
                                 </select>
-                                <div class="invalid-feedback">Seleccione una sucursal</div>
-                            </div>
-
-                            <!-- Teléfono -->
-                            <div class="col-md-6">
-                                <label for="inputTelefono" class="form-label">Teléfono</label>
-                                <input type="tel" class="form-control" id="inputTelefono"
-                                    placeholder="12345678">
-                                <div class="invalid-feedback">Ingrese un teléfono válido (8 dígitos)</div>
+                                <small class="form-text text-muted">
+                                    <i class="bi bi-info-circle"></i> Opcional para algunos roles
+                                </small>
                             </div>
 
                             <!-- Estado Activo -->
@@ -276,6 +276,10 @@
                             <p class="form-control-plaintext" id="detalleNombre">-</p>
                         </div>
                         <div class="col-md-6">
+                            <label class="form-label fw-semibold">DPI:</label>
+                            <p class="form-control-plaintext" id="detalleDPI">-</p>
+                        </div>
+                        <div class="col-md-6">
                             <label class="form-label fw-semibold">Email:</label>
                             <p class="form-control-plaintext" id="detalleEmail">-</p>
                         </div>
@@ -288,10 +292,6 @@
                             <p class="form-control-plaintext" id="detalleSucursal">-</p>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label fw-semibold">Teléfono:</label>
-                            <p class="form-control-plaintext" id="detalleTelefono">-</p>
-                        </div>
-                        <div class="col-md-6">
                             <label class="form-label fw-semibold">Estado:</label>
                             <p class="form-control-plaintext">
                                 <span id="detalleEstado" class="badge">-</span>
@@ -300,10 +300,6 @@
                         <div class="col-md-6">
                             <label class="form-label fw-semibold">Fecha de Creación:</label>
                             <p class="form-control-plaintext" id="detalleFechaCreacion">-</p>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label fw-semibold">Última Modificación:</label>
-                            <p class="form-control-plaintext" id="detalleUltimaModificacion">-</p>
                         </div>
                     </div>
                 </div>
@@ -384,6 +380,8 @@
     <!-- Servicios -->
     <script src="../../services/auth.service.js"></script>
     <script src="../../services/usuarios.service.js"></script>
+    <script src="../../services/roles.service.js"></script>
+    <script src="../../services/sucursales.service.js"></script>
 
     <!-- Controlador -->
     <script src="../../controllers/usuarios.controller.js"></script>

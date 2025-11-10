@@ -113,26 +113,41 @@ function updateUserInfo() {
  * Función de logout
  */
 async function logout() {
-    Alerts.confirm(
-        '¿Estás seguro que deseas cerrar sesión?',
-        'Cerrar Sesión',
-        async () => {
-            Loader.show('Cerrando sesión...');
-            
-            try {
-                await AuthService.logout();
-                Alerts.success('Sesión cerrada exitosamente');
-                
-                setTimeout(() => {
-                    window.location.href = '/views/auth/login.html';
-                }, 1000);
-            } catch (error) {
-                // Aunque falle, redirigir al login
-                Storage.clear();
-                window.location.href = '/views/auth/login.html';
-            }
+    const confirmLogout = confirm('¿Estás seguro que deseas cerrar sesión?');
+
+    if (confirmLogout) {
+        Loader.show('Cerrando sesión...');
+
+        try {
+            // El AuthService.logout() ya limpia el storage y redirige
+            await AuthService.logout();
+        } catch (error) {
+            // Aunque falle, AuthService ya limpió y redirigió
+            console.error('Error en logout:', error);
         }
-    );
+    }
+}
+
+/**
+ * Validar permisos de acceso a una página
+ * @param {Function} permissionCheck - Función de permiso a verificar (ej: Permissions.canAccessPOS)
+ * @param {string} redirectUrl - URL a donde redirigir si no tiene permisos
+ */
+function requirePermission(permissionCheck, redirectUrl = '/views/dashboard/index.html') {
+    // Verificar autenticación primero
+    if (!AuthService.isAuthenticated() || AuthService.isTokenExpired()) {
+        window.location.href = '/views/auth/login.html';
+        return false;
+    }
+
+    // Verificar permiso
+    if (!permissionCheck.call(Permissions)) {
+        alert('No tienes permisos para acceder a esta página');
+        window.location.href = redirectUrl;
+        return false;
+    }
+
+    return true;
 }
 
 /**

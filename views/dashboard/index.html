@@ -237,5 +237,16 @@
 
     <!-- Controlador -->
     <script src="../../controllers/dashboard.controller.js"></script>
+
+    <!-- Inicializar -->
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Cargar layout (navbar + sidebar con permisos)
+            await loadLayout();
+
+            // Inicializar dashboard
+            await DashboardController.init();
+        });
+    </script>
 </body>
 </html>

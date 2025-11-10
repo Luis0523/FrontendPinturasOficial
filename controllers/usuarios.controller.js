@@ -3,32 +3,24 @@
  * CONTROLADOR DE USUARIOS
  * =====================================================
  * Maneja toda la lógica de la vista de usuarios:
- * - Listado con paginación y filtros
- * - CRUD completo (crear, editar, ver detalle, eliminar)
- * - Validación de formularios
- * - Búsqueda en tiempo real
+ * - Listado con filtros
+ * - CRUD completo (crear, editar, eliminar)
  * - Gestión de roles y permisos
- * - Cambio de contraseña
  * =====================================================
  */
 
 const UsuariosController = {
     // Estado del controlador
     usuarios: [],
+    roles: [],
     sucursales: [],
-    currentPage: 1,
-    totalPages: 1,
-    totalRecords: 0,
-    limit: 20,
     currentUsuarioId: null,
     modalUsuario: null,
     modalDetalle: null,
-    modalPassword: null,
     isEditMode: false,
-    searchTimeout: null,
     filtros: {
         buscar: '',
-        rol: '',
+        rol_id: '',
         activo: 'true' // Por defecto solo activos
     },
 
@@ -43,16 +35,14 @@ const UsuariosController = {
             return;
         }
 
-        // Verificar permisos para ver usuarios
-        if (!UsuariosService.puedeVerUsuarios()) {
-            Permissions.redirectIfUnauthorized(() => false);
-            return;
+        // Validar permisos de acceso
+        if (!requirePermission(Permissions.canViewUsers)) {
+            return; // El requirePermission ya redirige
         }
 
         // Inicializar modals de Bootstrap
         const modalUsuarioElement = document.getElementById('modalUsuario');
         const modalDetalleElement = document.getElementById('modalDetalleUsuario');
-        const modalPasswordElement = document.getElementById('modalPassword');
 
         if (modalUsuarioElement) {
             this.modalUsuario = new bootstrap.Modal(modalUsuarioElement);
@@ -60,11 +50,9 @@ const UsuariosController = {
         if (modalDetalleElement) {
             this.modalDetalle = new bootstrap.Modal(modalDetalleElement);
         }
-        if (modalPasswordElement) {
-            this.modalPassword = new bootstrap.Modal(modalPasswordElement);
-        }
 
-        // Cargar sucursales
+        // Cargar datos iniciales
+        await this.loadRoles();
         await this.loadSucursales();
 
         // Configurar event listeners
@@ -78,12 +66,11 @@ const UsuariosController = {
      * Configurar event listeners
      */
     setupEventListeners() {
-        // Búsqueda en tiempo real
+        // Búsqueda
         const searchInput = document.getElementById('searchInput');
         if (searchInput) {
-            searchInput.addEventListener('input', (e) => {
-                this.filtros.buscar = e.target.value;
-                this.debounceSearch();
+            searchInput.addEventListener('input', () => {
+                this.loadUsuarios();
             });
         }
 
@@ -91,8 +78,7 @@ const UsuariosController = {
         const filterRol = document.getElementById('filterRol');
         if (filterRol) {
             filterRol.addEventListener('change', (e) => {
-                this.filtros.rol = e.target.value;
-                this.currentPage = 1;
+                this.filtros.rol_id = e.target.value;
                 this.loadUsuarios();
             });
         }
@@ -102,121 +88,67 @@ const UsuariosController = {
         if (filterEstado) {
             filterEstado.addEventListener('change', (e) => {
                 this.filtros.activo = e.target.value;
-                this.currentPage = 1;
                 this.loadUsuarios();
             });
         }
 
         // Botón guardar usuario
-        const btnGuardar = document.getElementById('btnGuardarUsuario');
-        if (btnGuardar) {
-            btnGuardar.addEventListener('click', () => this.saveUsuario());
-        }
-
-        // Botón guardar password
-        const btnGuardarPassword = document.getElementById('btnGuardarPassword');
-        if (btnGuardarPassword) {
-            btnGuardarPassword.addEventListener('click', () => this.savePassword());
+        const btnGuardarUsuario = document.getElementById('btnGuardarUsuario');
+        if (btnGuardarUsuario) {
+            btnGuardarUsuario.addEventListener('click', () => this.saveUsuario());
         }
 
         // Botón editar desde detalle
         const btnEditarDesdeDetalle = document.getElementById('btnEditarDesdeDetalle');
         if (btnEditarDesdeDetalle) {
             btnEditarDesdeDetalle.addEventListener('click', () => {
-                this.modalDetalle.hide();
-                this.openEditModal(this.currentUsuarioId);
-            });
-        }
-
-        // Limpiar modal al cerrar
-        const modalUsuarioElement = document.getElementById('modalUsuario');
-        if (modalUsuarioElement) {
-            modalUsuarioElement.addEventListener('hidden.bs.modal', () => {
-                this.clearForm();
-            });
-        }
-
-        // Validación en tiempo real
-        this.setupFormValidation();
-    },
-
-    /**
-     * Configurar validación de formulario
-     */
-    setupFormValidation() {
-        const inputNombre = document.getElementById('inputNombre');
-        const inputEmail = document.getElementById('inputEmail');
-        const inputPassword = document.getElementById('inputPassword');
-        const inputTelefono = document.getElementById('inputTelefono');
-
-        // Validar nombre
-        if (inputNombre) {
-            inputNombre.addEventListener('blur', (e) => {
-                const valor = e.target.value.trim();
-                if (valor.length < 3) {
-                    e.target.classList.add('is-invalid');
-                } else {
-                    e.target.classList.remove('is-invalid');
-                    e.target.classList.add('is-valid');
-                }
-            });
-        }
-
-        // Validar email
-        if (inputEmail) {
-            inputEmail.addEventListener('blur', (e) => {
-                const valor = e.target.value.trim();
-                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-                if (!valor || !emailRegex.test(valor)) {
-                    e.target.classList.add('is-invalid');
-                } else {
-                    e.target.classList.remove('is-invalid');
-                    e.target.classList.add('is-valid');
-                }
-            });
-        }
-
-        // Validar contraseña (solo en modo crear)
-        if (inputPassword) {
-            inputPassword.addEventListener('blur', (e) => {
-                const valor = e.target.value.trim();
-                // Solo validar si estamos en modo crear o si hay valor
-                if (!this.isEditMode && valor.length < 6) {
-                    e.target.classList.add('is-invalid');
-                } else if (valor && valor.length < 6) {
-                    e.target.classList.add('is-invalid');
-                } else if (valor) {
-                    e.target.classList.remove('is-invalid');
-                    e.target.classList.add('is-valid');
-                } else {
-                    e.target.classList.remove('is-invalid', 'is-valid');
-                }
-            });
-        }
-
-        // Validar teléfono (opcional)
-        if (inputTelefono) {
-            inputTelefono.addEventListener('blur', (e) => {
-                const valor = e.target.value.trim();
-                if (valor && valor.length < 8) {
-                    e.target.classList.add('is-invalid');
-                } else {
-                    e.target.classList.remove('is-invalid');
-                    if (valor) e.target.classList.add('is-valid');
+                if (this.currentUsuarioId) {
+                    this.modalDetalle.hide();
+                    this.openEditModal(this.currentUsuarioId);
                 }
             });
         }
     },
 
     /**
-     * Debounce para búsqueda
+     * Cargar roles
      */
-    debounceSearch() {
-        clearTimeout(this.searchTimeout);
-        this.searchTimeout = setTimeout(() => {
-            this.currentPage = 1;
-            this.loadUsuarios();
-        }, 500);
+    async loadRoles() {
+        try {
+            const response = await RolesService.getRoles();
+            if (response.success && response.data) {
+                this.roles = response.data;
+
+                // Llenar selector de roles del formulario
+                const selectRol = document.getElementById('selectRol');
+                if (selectRol) {
+                    selectRol.innerHTML = '<option value="">Seleccione un rol</option>';
+                    this.roles.forEach(rol => {
+                        const option = document.createElement('option');
+                        option.value = rol.id;
+                        option.textContent = rol.nombre;
+                        selectRol.appendChild(option);
+                    });
+                }
+
+                // Llenar filtro de roles
+                const filterRol = document.getElementById('filterRol');
+                if (filterRol) {
+                    const currentValue = filterRol.value;
+                    filterRol.innerHTML = '<option value="">Todos los roles</option>';
+                    this.roles.forEach(rol => {
+                        const option = document.createElement('option');
+                        option.value = rol.id;
+                        option.textContent = rol.nombre;
+                        filterRol.appendChild(option);
+                    });
+                    filterRol.value = currentValue;
+                }
+            }
+        } catch (error) {
+            console.error('Error al cargar roles:', error);
+            Alerts.error('Error al cargar los roles');
+        }
     },
 
     /**
@@ -224,55 +156,77 @@ const UsuariosController = {
      */
     async loadSucursales() {
         try {
-            const response = await axios.get('/sucursales');
-            if (response.data.success) {
-                this.sucursales = response.data.data;
+            const response = await SucursalesService.getSucursales();
+            if (response.success && response.data) {
+                this.sucursales = response.data;
+
+                // Llenar selector de sucursales
+                const selectSucursal = document.getElementById('selectSucursal');
+                if (selectSucursal) {
+                    selectSucursal.innerHTML = '<option value="">Sin sucursal asignada</option>';
+                    this.sucursales.forEach(sucursal => {
+                        const option = document.createElement('option');
+                        option.value = sucursal.id;
+                        option.textContent = sucursal.nombre;
+                        selectSucursal.appendChild(option);
+                    });
+                }
             }
         } catch (error) {
-            console.error('Error cargando sucursales:', error);
+            console.error('Error al cargar sucursales:', error);
+            Alerts.error('Error al cargar las sucursales');
         }
     },
 
     /**
-     * Cargar usuarios con filtros y paginación
+     * Cargar usuarios
      */
     async loadUsuarios() {
         try {
-            Loader.show('Cargando usuarios...');
+            Loader.show();
 
-            const params = {
-                limite: this.limit,
-                offset: (this.currentPage - 1) * this.limit,
-                buscar: this.filtros.buscar,
-                rol: this.filtros.rol,
-                activo: this.filtros.activo
-            };
+            // Preparar filtros
+            const filtros = {};
 
-            const response = await UsuariosService.obtenerUsuarios(params);
-
-            if (response.success) {
-                this.usuarios = response.data;
-                this.totalRecords = response.total || this.usuarios.length;
-                this.totalPages = Math.ceil(this.totalRecords / this.limit);
-
-                this.renderTable();
-                this.renderPagination();
-            } else {
-                throw new Error(response.message || 'Error al cargar usuarios');
+            if (this.filtros.activo !== '') {
+                filtros.activo = this.filtros.activo;
             }
 
-            Loader.hide();
+            if (this.filtros.rol_id) {
+                filtros.rol_id = this.filtros.rol_id;
+            }
+
+            const response = await UsuariosService.getUsuarios(filtros);
+
+            if (response.success && response.data) {
+                this.usuarios = response.data;
+
+                // Filtrar por búsqueda en frontend (nombre, email, dpi)
+                const searchTerm = document.getElementById('searchInput')?.value.toLowerCase() || '';
+                let usuariosFiltrados = this.usuarios;
+
+                if (searchTerm) {
+                    usuariosFiltrados = this.usuarios.filter(usuario =>
+                        usuario.nombre?.toLowerCase().includes(searchTerm) ||
+                        usuario.email?.toLowerCase().includes(searchTerm) ||
+                        usuario.dpi?.toLowerCase().includes(searchTerm)
+                    );
+                }
+
+                this.renderTable(usuariosFiltrados);
+            }
         } catch (error) {
+            console.error('Error al cargar usuarios:', error);
+            Alerts.error('Error al cargar los usuarios');
+        } finally {
             Loader.hide();
-            console.error('Error cargando usuarios:', error);
-            Alerts.error('Error al cargar usuarios', error.message);
         }
     },
 
     /**
      * Renderizar tabla de usuarios
      */
-    renderTable() {
+    renderTable(usuarios) {
         const tbody = document.getElementById('usuariosTableBody');
         const emptyState = document.getElementById('emptyState');
         const tableContainer = document.getElementById('tableContainer');
@@ -282,578 +236,305 @@ const UsuariosController = {
         // Limpiar tabla
         tbody.innerHTML = '';
 
-        // Sin resultados
-        if (this.usuarios.length === 0) {
-            tableContainer.style.display = 'none';
-            emptyState.style.display = 'block';
-            document.getElementById('paginationContainer').style.display = 'none';
+        // Si no hay usuarios
+        if (!usuarios || usuarios.length === 0) {
+            if (tableContainer) tableContainer.style.display = 'none';
+            if (emptyState) emptyState.style.display = 'block';
             return;
         }
 
         // Mostrar tabla
-        tableContainer.style.display = 'block';
-        emptyState.style.display = 'none';
-        document.getElementById('paginationContainer').style.display = 'flex';
+        if (tableContainer) tableContainer.style.display = 'block';
+        if (emptyState) emptyState.style.display = 'none';
 
-        const usuarioActual = UsuariosService.getUsuarioActual();
-        const puedeGestionar = UsuariosService.validarPermisos();
+        // Renderizar filas
+        usuarios.forEach(usuario => {
+            const tr = document.createElement('tr');
 
-        // Llenar filas
-        this.usuarios.forEach(usuario => {
-            const row = document.createElement('tr');
-            const esUsuarioActual = usuario.id === usuarioActual.id;
-            const badgeColor = this.getRolBadgeColor(usuario.rol);
+            // Estado badge
+            const estadoBadge = usuario.activo
+                ? '<span class="badge bg-success">Activo</span>'
+                : '<span class="badge bg-secondary">Inactivo</span>';
 
-            row.innerHTML = `
+            tr.innerHTML = `
                 <td>${usuario.id}</td>
                 <td>
-                    <strong>${this.escapeHtml(usuario.nombre)}</strong>
-                    ${esUsuarioActual ? '<span class="badge bg-info ms-2">Tú</span>' : ''}
+                    <div class="fw-semibold">${usuario.nombre || '-'}</div>
                 </td>
-                <td>${this.escapeHtml(usuario.email)}</td>
+                <td>${usuario.dpi || '-'}</td>
+                <td>${usuario.email || '-'}</td>
                 <td>
-                    <span class="badge bg-${badgeColor}">${this.escapeHtml(usuario.rol)}</span>
+                    <span class="badge bg-primary">${usuario.rol?.nombre || '-'}</span>
                 </td>
-                <td>${usuario.sucursal_nombre || 'N/A'}</td>
-                <td>${usuario.telefono || '-'}</td>
+                <td>${usuario.sucursal?.nombre || 'Sin asignar'}</td>
+                <td>${estadoBadge}</td>
                 <td>
-                    <span class="badge bg-${usuario.activo ? 'success' : 'danger'}">
-                        ${usuario.activo ? 'Activo' : 'Inactivo'}
-                    </span>
-                </td>
-                <td>
-                    <div class="btn-group btn-group-sm" role="group">
-                        <button class="btn btn-outline-info"
-                                onclick="UsuariosController.showDetalle(${usuario.id})"
+                    <div class="btn-group btn-group-sm">
+                        <button class="btn btn-outline-info" onclick="UsuariosController.viewUsuario(${usuario.id})"
                                 title="Ver detalle">
                             <i class="bi bi-eye"></i>
                         </button>
-                        ${puedeGestionar && !esUsuarioActual ? `
-                            <button class="btn btn-outline-primary"
-                                    onclick="UsuariosController.openEditModal(${usuario.id})"
-                                    title="Editar">
-                                <i class="bi bi-pencil"></i>
-                            </button>
-                            <button class="btn btn-outline-warning"
-                                    onclick="UsuariosController.openPasswordModal(${usuario.id})"
-                                    title="Cambiar contraseña">
-                                <i class="bi bi-key"></i>
-                            </button>
-                            <button class="btn btn-outline-${usuario.activo ? 'danger' : 'success'}"
-                                    onclick="UsuariosController.toggleEstado(${usuario.id}, ${!usuario.activo})"
-                                    title="${usuario.activo ? 'Desactivar' : 'Activar'}">
-                                <i class="bi bi-${usuario.activo ? 'x-circle' : 'check-circle'}"></i>
-                            </button>
-                        ` : ''}
+                        <button class="btn btn-outline-primary" onclick="UsuariosController.openEditModal(${usuario.id})"
+                                title="Editar">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                        <button class="btn btn-outline-danger" onclick="UsuariosController.deleteUsuario(${usuario.id})"
+                                title="Desactivar">
+                            <i class="bi bi-trash"></i>
+                        </button>
                     </div>
                 </td>
             `;
 
-            tbody.appendChild(row);
+            tbody.appendChild(tr);
         });
-    },
-
-    /**
-     * Renderizar paginación
-     */
-    renderPagination() {
-        const paginationContainer = document.getElementById('pagination');
-        if (!paginationContainer) return;
-
-        paginationContainer.innerHTML = '';
-
-        // Botón anterior
-        const prevLi = document.createElement('li');
-        prevLi.className = `page-item ${this.currentPage === 1 ? 'disabled' : ''}`;
-        prevLi.innerHTML = `
-            <a class="page-link" href="#" onclick="UsuariosController.goToPage(${this.currentPage - 1}); return false;">
-                Anterior
-            </a>
-        `;
-        paginationContainer.appendChild(prevLi);
-
-        // Páginas
-        const startPage = Math.max(1, this.currentPage - 2);
-        const endPage = Math.min(this.totalPages, this.currentPage + 2);
-
-        if (startPage > 1) {
-            const firstLi = document.createElement('li');
-            firstLi.className = 'page-item';
-            firstLi.innerHTML = `<a class="page-link" href="#" onclick="UsuariosController.goToPage(1); return false;">1</a>`;
-            paginationContainer.appendChild(firstLi);
-
-            if (startPage > 2) {
-                const dotsLi = document.createElement('li');
-                dotsLi.className = 'page-item disabled';
-                dotsLi.innerHTML = '<span class="page-link">...</span>';
-                paginationContainer.appendChild(dotsLi);
-            }
-        }
-
-        for (let i = startPage; i <= endPage; i++) {
-            const li = document.createElement('li');
-            li.className = `page-item ${i === this.currentPage ? 'active' : ''}`;
-            li.innerHTML = `
-                <a class="page-link" href="#" onclick="UsuariosController.goToPage(${i}); return false;">
-                    ${i}
-                </a>
-            `;
-            paginationContainer.appendChild(li);
-        }
-
-        if (endPage < this.totalPages) {
-            if (endPage < this.totalPages - 1) {
-                const dotsLi = document.createElement('li');
-                dotsLi.className = 'page-item disabled';
-                dotsLi.innerHTML = '<span class="page-link">...</span>';
-                paginationContainer.appendChild(dotsLi);
-            }
-
-            const lastLi = document.createElement('li');
-            lastLi.className = 'page-item';
-            lastLi.innerHTML = `<a class="page-link" href="#" onclick="UsuariosController.goToPage(${this.totalPages}); return false;">${this.totalPages}</a>`;
-            paginationContainer.appendChild(lastLi);
-        }
-
-        // Botón siguiente
-        const nextLi = document.createElement('li');
-        nextLi.className = `page-item ${this.currentPage === this.totalPages ? 'disabled' : ''}`;
-        nextLi.innerHTML = `
-            <a class="page-link" href="#" onclick="UsuariosController.goToPage(${this.currentPage + 1}); return false;">
-                Siguiente
-            </a>
-        `;
-        paginationContainer.appendChild(nextLi);
-
-        // Actualizar texto de información
-        const startRecord = (this.currentPage - 1) * this.limit + 1;
-        const endRecord = Math.min(this.currentPage * this.limit, this.totalRecords);
-        document.getElementById('paginationInfo').textContent =
-            `Mostrando ${startRecord} a ${endRecord} de ${this.totalRecords} usuarios`;
-    },
-
-    /**
-     * Ir a página específica
-     */
-    goToPage(page) {
-        if (page >= 1 && page <= this.totalPages) {
-            this.currentPage = page;
-            this.loadUsuarios();
-        }
     },
 
     /**
      * Abrir modal para crear usuario
      */
     openCreateModal() {
-        // Verificar permisos
-        if (!UsuariosService.validarPermisos()) {
-            Permissions.showAccessDenied();
-            return;
-        }
-
         this.isEditMode = false;
         this.currentUsuarioId = null;
-        this.clearForm();
 
-        // Configurar modal
-        document.getElementById('modalUsuarioLabel').textContent = 'Nuevo Usuario';
-        document.getElementById('passwordGroup').style.display = 'block';
-        document.getElementById('inputPassword').required = true;
-
-        // Cargar roles en el select
-        this.loadRolesSelect();
-
-        // Cargar sucursales en el select
-        this.loadSucursalesSelect();
-
-        this.modalUsuario.show();
-    },
-
-    /**
-     * Abrir modal para editar usuario
-     */
-    async openEditModal(id) {
-        // Verificar permisos
-        if (!UsuariosService.validarPermisos()) {
-            Permissions.showAccessDenied();
-            return;
-        }
-
-        try {
-            Loader.show('Cargando datos...');
-
-            const response = await UsuariosService.obtenerUsuarioPorId(id);
-
-            if (!response.success) {
-                throw new Error(response.message);
-            }
-
-            const usuario = response.data;
-
-            // Verificar si puede editar este usuario
-            if (!UsuariosService.puedeEditarUsuario(usuario)) {
-                Alerts.warning('No puedes editar tu propio usuario desde este módulo');
-                Loader.hide();
-                return;
-            }
-
-            this.isEditMode = true;
-            this.currentUsuarioId = id;
-
-            // Configurar modal
-            document.getElementById('modalUsuarioLabel').textContent = 'Editar Usuario';
-            document.getElementById('passwordGroup').style.display = 'none';
-            document.getElementById('inputPassword').required = false;
-
-            // Cargar roles y sucursales
-            this.loadRolesSelect();
-            this.loadSucursalesSelect();
-
-            // Llenar formulario
-            document.getElementById('inputNombre').value = usuario.nombre;
-            document.getElementById('inputEmail').value = usuario.email;
-            document.getElementById('selectRol').value = usuario.rol;
-            document.getElementById('selectSucursal').value = usuario.sucursal_id;
-            document.getElementById('inputTelefono').value = usuario.telefono || '';
-            document.getElementById('inputActivo').checked = usuario.activo;
-
-            Loader.hide();
-            this.modalUsuario.show();
-        } catch (error) {
-            Loader.hide();
-            console.error('Error cargando usuario:', error);
-            Alerts.error('Error al cargar usuario', error.message);
-        }
-    },
-
-    /**
-     * Abrir modal para cambiar contraseña
-     */
-    async openPasswordModal(id) {
-        // Verificar permisos
-        if (!UsuariosService.validarPermisos()) {
-            Permissions.showAccessDenied();
-            return;
-        }
-
-        try {
-            const response = await UsuariosService.obtenerUsuarioPorId(id);
-            if (!response.success) {
-                throw new Error(response.message);
-            }
-
-            this.currentUsuarioId = id;
-            document.getElementById('passwordUsuarioNombre').textContent = response.data.nombre;
-
-            // Limpiar campos
-            document.getElementById('inputNuevaPassword').value = '';
-            document.getElementById('inputConfirmarPassword').value = '';
-
-            this.modalPassword.show();
-        } catch (error) {
-            console.error('Error:', error);
-            Alerts.error('Error', error.message);
-        }
-    },
-
-    /**
-     * Guardar usuario (crear o editar)
-     */
-    async saveUsuario() {
-        try {
-            // Validar permisos
-            if (!UsuariosService.validarPermisos()) {
-                Permissions.showAccessDenied();
-                return;
-            }
-
-            // Obtener datos del formulario
-            const usuarioData = {
-                nombre: document.getElementById('inputNombre').value.trim(),
-                email: document.getElementById('inputEmail').value.trim(),
-                rol: document.getElementById('selectRol').value,
-                sucursal_id: document.getElementById('selectSucursal').value,
-                telefono: document.getElementById('inputTelefono').value.trim(),
-                activo: document.getElementById('inputActivo').checked
-            };
-
-            // Si es modo crear, agregar password
-            if (!this.isEditMode) {
-                usuarioData.password = document.getElementById('inputPassword').value;
-            }
-
-            // Validar datos básicos
-            if (!usuarioData.nombre || !usuarioData.email || !usuarioData.rol || !usuarioData.sucursal_id) {
-                Alerts.warning('Por favor complete todos los campos requeridos');
-                return;
-            }
-
-            // Validar email
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!emailRegex.test(usuarioData.email)) {
-                Alerts.warning('El formato del email no es válido');
-                return;
-            }
-
-            // Validar password en modo crear
-            if (!this.isEditMode && (!usuarioData.password || usuarioData.password.length < 6)) {
-                Alerts.warning('La contraseña debe tener al menos 6 caracteres');
-                return;
-            }
-
-            Loader.show(this.isEditMode ? 'Actualizando usuario...' : 'Creando usuario...');
-
-            let response;
-            if (this.isEditMode) {
-                response = await UsuariosService.actualizarUsuario(this.currentUsuarioId, usuarioData);
-            } else {
-                response = await UsuariosService.crearUsuario(usuarioData);
-            }
-
-            if (response.success) {
-                Alerts.success(
-                    this.isEditMode ? 'Usuario actualizado correctamente' : 'Usuario creado correctamente'
-                );
-                this.modalUsuario.hide();
-                await this.loadUsuarios();
-            } else {
-                throw new Error(response.message);
-            }
-
-            Loader.hide();
-        } catch (error) {
-            Loader.hide();
-            console.error('Error guardando usuario:', error);
-            Alerts.error('Error al guardar usuario', error.message);
-        }
-    },
-
-    /**
-     * Guardar nueva contraseña
-     */
-    async savePassword() {
-        try {
-            const nuevaPassword = document.getElementById('inputNuevaPassword').value;
-            const confirmarPassword = document.getElementById('inputConfirmarPassword').value;
-
-            if (!nuevaPassword || !confirmarPassword) {
-                Alerts.warning('Por favor complete todos los campos');
-                return;
-            }
-
-            if (nuevaPassword.length < 6) {
-                Alerts.warning('La contraseña debe tener al menos 6 caracteres');
-                return;
-            }
-
-            if (nuevaPassword !== confirmarPassword) {
-                Alerts.warning('Las contraseñas no coinciden');
-                return;
-            }
-
-            Loader.show('Cambiando contraseña...');
-
-            const response = await UsuariosService.cambiarPassword(
-                this.currentUsuarioId,
-                nuevaPassword
-            );
-
-            if (response.success) {
-                Alerts.success('Contraseña actualizada correctamente');
-                this.modalPassword.hide();
-            } else {
-                throw new Error(response.message);
-            }
-
-            Loader.hide();
-        } catch (error) {
-            Loader.hide();
-            console.error('Error cambiando contraseña:', error);
-            Alerts.error('Error al cambiar contraseña', error.message);
-        }
-    },
-
-    /**
-     * Cambiar estado de usuario (activar/desactivar)
-     */
-    async toggleEstado(id, nuevoEstado) {
-        try {
-            const accion = nuevoEstado ? 'activar' : 'desactivar';
-            const confirmado = await Alerts.confirm(
-                `¿Está seguro que desea ${accion} este usuario?`,
-                `${accion.charAt(0).toUpperCase() + accion.slice(1)} Usuario`
-            );
-
-            if (!confirmado) return;
-
-            Loader.show(`${accion.charAt(0).toUpperCase() + accion.slice(1)}ando usuario...`);
-
-            const response = await UsuariosService.cambiarEstado(id, nuevoEstado);
-
-            if (response.success) {
-                Alerts.success(`Usuario ${accion}do correctamente`);
-                await this.loadUsuarios();
-            } else {
-                throw new Error(response.message);
-            }
-
-            Loader.hide();
-        } catch (error) {
-            Loader.hide();
-            console.error('Error cambiando estado:', error);
-            Alerts.error('Error al cambiar estado', error.message);
-        }
-    },
-
-    /**
-     * Mostrar detalle de usuario
-     */
-    async showDetalle(id) {
-        try {
-            Loader.show('Cargando detalles...');
-
-            const response = await UsuariosService.obtenerUsuarioPorId(id);
-
-            if (!response.success) {
-                throw new Error(response.message);
-            }
-
-            const usuario = response.data;
-            this.currentUsuarioId = id;
-
-            // Llenar modal de detalle
-            document.getElementById('detalleNombre').textContent = usuario.nombre;
-            document.getElementById('detalleEmail').textContent = usuario.email;
-            document.getElementById('detalleRol').textContent = usuario.rol;
-            document.getElementById('detalleSucursal').textContent = usuario.sucursal_nombre || 'N/A';
-            document.getElementById('detalleTelefono').textContent = usuario.telefono || '-';
-
-            const estadoBadge = document.getElementById('detalleEstado');
-            estadoBadge.className = `badge bg-${usuario.activo ? 'success' : 'danger'}`;
-            estadoBadge.textContent = usuario.activo ? 'Activo' : 'Inactivo';
-
-            document.getElementById('detalleFechaCreacion').textContent =
-                usuario.fecha_creacion ? new Date(usuario.fecha_creacion).toLocaleString() : '-';
-            document.getElementById('detalleUltimaModificacion').textContent =
-                usuario.fecha_modificacion ? new Date(usuario.fecha_modificacion).toLocaleString() : '-';
-
-            // Mostrar u ocultar botón editar según permisos
-            const btnEditar = document.getElementById('btnEditarDesdeDetalle');
-            if (btnEditar) {
-                const puedeEditar = UsuariosService.puedeEditarUsuario(usuario);
-                btnEditar.style.display = puedeEditar ? 'block' : 'none';
-            }
-
-            Loader.hide();
-            this.modalDetalle.show();
-        } catch (error) {
-            Loader.hide();
-            console.error('Error cargando detalle:', error);
-            Alerts.error('Error al cargar detalle', error.message);
-        }
-    },
-
-    /**
-     * Cargar roles en el select
-     */
-    loadRolesSelect() {
-        const select = document.getElementById('selectRol');
-        if (!select) return;
-
-        const roles = UsuariosService.getRolesDisponibles();
-
-        select.innerHTML = '<option value="">Seleccione un rol</option>';
-
-        roles.forEach(rol => {
-            const option = document.createElement('option');
-            option.value = rol.value;
-            option.textContent = `${rol.label} - ${rol.descripcion}`;
-            select.appendChild(option);
-        });
-    },
-
-    /**
-     * Cargar sucursales en el select
-     */
-    loadSucursalesSelect() {
-        const select = document.getElementById('selectSucursal');
-        if (!select) return;
-
-        select.innerHTML = '<option value="">Seleccione una sucursal</option>';
-
-        this.sucursales.forEach(sucursal => {
-            const option = document.createElement('option');
-            option.value = sucursal.id;
-            option.textContent = sucursal.nombre;
-            select.appendChild(option);
-        });
-    },
-
-    /**
-     * Limpiar formulario
-     */
-    clearForm() {
+        // Limpiar formulario
         const form = document.getElementById('formUsuario');
         if (form) {
             form.reset();
             form.classList.remove('was-validated');
         }
 
-        // Limpiar validaciones
-        const inputs = form.querySelectorAll('.form-control');
-        inputs.forEach(input => {
-            input.classList.remove('is-valid', 'is-invalid');
-        });
+        // Cambiar título
+        const modalLabel = document.getElementById('modalUsuarioLabel');
+        if (modalLabel) {
+            modalLabel.innerHTML = '<i class="bi bi-person-plus me-2"></i>Nuevo Usuario';
+        }
+
+        // Mostrar campo de password
+        const passwordGroup = document.getElementById('passwordGroup');
+        if (passwordGroup) {
+            passwordGroup.style.display = 'block';
+            const inputPassword = document.getElementById('inputPassword');
+            if (inputPassword) inputPassword.required = true;
+        }
+
+        // Mostrar modal
+        if (this.modalUsuario) {
+            this.modalUsuario.show();
+        }
     },
 
     /**
-     * Obtener color de badge según rol
+     * Abrir modal para editar usuario
      */
-    getRolBadgeColor(rol) {
-        const colores = {
-            'Administrador': 'danger',
-            'Gerente': 'primary',
-            'Bodeguero': 'info',
-            'Cajero': 'warning',
-            'Vendedor': 'secondary'
-        };
-        return colores[rol] || 'secondary';
+    async openEditModal(usuarioId) {
+        try {
+            this.isEditMode = true;
+            this.currentUsuarioId = usuarioId;
+
+            Loader.show();
+
+            const response = await UsuariosService.getUsuarioById(usuarioId);
+
+            if (response.success && response.data) {
+                const usuario = response.data;
+
+                // Llenar formulario
+                document.getElementById('inputNombre').value = usuario.nombre || '';
+                document.getElementById('inputDPI').value = usuario.dpi || '';
+                document.getElementById('inputEmail').value = usuario.email || '';
+                document.getElementById('selectRol').value = usuario.rol_id || '';
+                document.getElementById('selectSucursal').value = usuario.sucursal_id || '';
+                document.getElementById('inputActivo').checked = usuario.activo;
+
+                // Ocultar campo de password en edición
+                const passwordGroup = document.getElementById('passwordGroup');
+                if (passwordGroup) {
+                    passwordGroup.style.display = 'none';
+                    const inputPassword = document.getElementById('inputPassword');
+                    if (inputPassword) {
+                        inputPassword.required = false;
+                        inputPassword.value = '';
+                    }
+                }
+
+                // Cambiar título
+                const modalLabel = document.getElementById('modalUsuarioLabel');
+                if (modalLabel) {
+                    modalLabel.innerHTML = '<i class="bi bi-pencil me-2"></i>Editar Usuario';
+                }
+
+                // Limpiar validación
+                const form = document.getElementById('formUsuario');
+                if (form) form.classList.remove('was-validated');
+
+                // Mostrar modal
+                if (this.modalUsuario) {
+                    this.modalUsuario.show();
+                }
+            }
+        } catch (error) {
+            console.error('Error al cargar usuario:', error);
+            Alerts.error('Error al cargar el usuario');
+        } finally {
+            Loader.hide();
+        }
+    },
+
+    /**
+     * Guardar usuario (crear o actualizar)
+     */
+    async saveUsuario() {
+        const form = document.getElementById('formUsuario');
+
+        if (!form) return;
+
+        // Validar formulario
+        if (!form.checkValidity()) {
+            form.classList.add('was-validated');
+            return;
+        }
+
+        try {
+            Loader.show();
+
+            // Obtener datos del formulario
+            const usuarioData = {
+                nombre: document.getElementById('inputNombre').value.trim(),
+                dpi: document.getElementById('inputDPI').value.trim(),
+                email: document.getElementById('inputEmail').value.trim(),
+                rol_id: document.getElementById('selectRol').value,
+                sucursal_id: document.getElementById('selectSucursal').value || null,
+                activo: document.getElementById('inputActivo').checked
+            };
+
+            // Si es creación, agregar password
+            if (!this.isEditMode) {
+                const password = document.getElementById('inputPassword').value;
+                if (password) {
+                    usuarioData.password = password;
+                }
+            }
+
+            let response;
+
+            if (this.isEditMode) {
+                // Actualizar usuario existente
+                response = await UsuariosService.updateUsuario(this.currentUsuarioId, usuarioData);
+            } else {
+                // Crear nuevo usuario
+                response = await UsuariosService.createUsuario(usuarioData);
+            }
+
+            if (response.success) {
+                Alerts.success(this.isEditMode ? 'Usuario actualizado exitosamente' : 'Usuario creado exitosamente');
+
+                // Cerrar modal
+                if (this.modalUsuario) {
+                    this.modalUsuario.hide();
+                }
+
+                // Recargar lista
+                await this.loadUsuarios();
+            }
+        } catch (error) {
+            console.error('Error al guardar usuario:', error);
+            Alerts.error(error.message || 'Error al guardar el usuario');
+        } finally {
+            Loader.hide();
+        }
+    },
+
+    /**
+     * Ver detalle de usuario
+     */
+    async viewUsuario(usuarioId) {
+        try {
+            this.currentUsuarioId = usuarioId;
+
+            Loader.show();
+
+            const response = await UsuariosService.getUsuarioById(usuarioId);
+
+            if (response.success && response.data) {
+                const usuario = response.data;
+
+                // Llenar modal de detalle
+                document.getElementById('detalleNombre').textContent = usuario.nombre || '-';
+                document.getElementById('detalleDPI').textContent = usuario.dpi || '-';
+                document.getElementById('detalleEmail').textContent = usuario.email || '-';
+                document.getElementById('detalleRol').textContent = usuario.rol?.nombre || '-';
+                document.getElementById('detalleSucursal').textContent = usuario.sucursal?.nombre || 'Sin asignar';
+
+                const estadoBadge = usuario.activo
+                    ? '<span class="badge bg-success">Activo</span>'
+                    : '<span class="badge bg-secondary">Inactivo</span>';
+                document.getElementById('detalleEstado').innerHTML = estadoBadge;
+
+                // Fecha de creación
+                if (usuario.creado_en) {
+                    const fecha = new Date(usuario.creado_en);
+                    document.getElementById('detalleFechaCreacion').textContent = fecha.toLocaleDateString('es-GT');
+                } else {
+                    document.getElementById('detalleFechaCreacion').textContent = '-';
+                }
+
+                // Mostrar modal
+                if (this.modalDetalle) {
+                    this.modalDetalle.show();
+                }
+            }
+        } catch (error) {
+            console.error('Error al cargar usuario:', error);
+            Alerts.error('Error al cargar el usuario');
+        } finally {
+            Loader.hide();
+        }
+    },
+
+    /**
+     * Eliminar (desactivar) usuario
+     */
+    async deleteUsuario(usuarioId) {
+        const confirmar = await Alerts.confirm(
+            '¿Está seguro de desactivar este usuario?',
+            'El usuario no podrá iniciar sesión en el sistema'
+        );
+
+        if (!confirmar) return;
+
+        try {
+            Loader.show();
+
+            const response = await UsuariosService.deleteUsuario(usuarioId);
+
+            if (response.success) {
+                Alerts.success('Usuario desactivado exitosamente');
+                await this.loadUsuarios();
+            }
+        } catch (error) {
+            console.error('Error al eliminar usuario:', error);
+            Alerts.error(error.message || 'Error al eliminar el usuario');
+        } finally {
+            Loader.hide();
+        }
     },
 
     /**
      * Limpiar filtros
      */
     clearFilters() {
-        this.filtros = {
-            buscar: '',
-            rol: '',
-            activo: 'true'
-        };
-
-        // Limpiar inputs
         document.getElementById('searchInput').value = '';
         document.getElementById('filterRol').value = '';
         document.getElementById('filterEstado').value = 'true';
 
-        // Recargar
-        this.currentPage = 1;
-        this.loadUsuarios();
-    },
-
-    /**
-     * Escapar HTML para prevenir XSS
-     */
-    escapeHtml(text) {
-        if (!text) return '';
-        const map = {
-            '&': '&amp;',
-            '<': '&lt;',
-            '>': '&gt;',
-            '"': '&quot;',
-            "'": '&#039;'
+        this.filtros = {
+            buscar: '',
+            rol_id: '',
+            activo: 'true'
         };
-        return text.toString().replace(/[&<>"']/g, m => map[m]);
+
+        this.loadUsuarios();
     }
 };
 

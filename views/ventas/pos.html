@@ -265,38 +265,78 @@
                                 
                                 <hr>
                                 
-                                <!-- Método de Pago -->
+                                <!-- Métodos de Pago -->
                                 <div class="mb-3">
-                                    <label for="selectMetodoPago" class="form-label fw-bold">
-                                        <i class="bi bi-credit-card-fill"></i> Método de Pago
+                                    <label class="form-label fw-bold">
+                                        <i class="bi bi-credit-card-fill"></i> Métodos de Pago
                                     </label>
-                                    <select class="form-select" id="selectMetodoPago">
-                                        <option value="EFECTIVO" selected>💵 Efectivo</option>
-                                        <option value="TARJETA">💳 Tarjeta</option>
-                                        <option value="TRANSFERENCIA">🏦 Transferencia</option>
-                                    </select>
-                                </div>
-                                
-                                <!-- Monto Recibido (solo para efectivo) -->
-                                <div class="mb-3" id="montoRecibidoContainer" style="display: none;">
-                                    <label for="inputMontoRecibido" class="form-label">
-                                        Monto Recibido
-                                    </label>
-                                    <div class="input-group">
-                                        <span class="input-group-text">Q</span>
-                                        <input 
-                                            type="number" 
-                                            class="form-control" 
-                                            id="inputMontoRecibido"
-                                            placeholder="0.00"
-                                            step="0.01"
-                                            min="0"
-                                        >
+
+                                    <!-- Lista de pagos agregados -->
+                                    <div id="listaPagos" class="mb-2">
+                                        <!-- Se llenará dinámicamente -->
                                     </div>
-                                    <div class="alert alert-info mt-2 py-2 mb-0" id="cambioContainer" style="display: none;">
-                                        <small>
-                                            <strong>Cambio:</strong> Q<span id="cambio">0.00</span>
-                                        </small>
+
+                                    <!-- Formulario para agregar pago -->
+                                    <div class="card card-body p-2 bg-light">
+                                        <div class="row g-2">
+                                            <div class="col-7">
+                                                <select class="form-select form-select-sm" id="selectMetodoPago">
+                                                    <option value="EFECTIVO">💵 Efectivo</option>
+                                                    <option value="TARJETA_DEBITO">💳 Tarjeta Débito</option>
+                                                    <option value="TARJETA_CREDITO">💳 Tarjeta Crédito</option>
+                                                    <option value="CHEQUE">📝 Cheque</option>
+                                                    <option value="TRANSFERENCIA">🏦 Transferencia</option>
+                                                    <option value="DEPOSITO">🏦 Depósito</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-5">
+                                                <div class="input-group input-group-sm">
+                                                    <span class="input-group-text">Q</span>
+                                                    <input
+                                                        type="number"
+                                                        class="form-control"
+                                                        id="inputMontoPago"
+                                                        placeholder="0.00"
+                                                        step="0.01"
+                                                        min="0.01"
+                                                    >
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Referencia opcional -->
+                                        <div class="mt-2" id="referenciaContainer" style="display: none;">
+                                            <input
+                                                type="text"
+                                                class="form-control form-control-sm"
+                                                id="inputReferencia"
+                                                placeholder="Número de referencia/cheque"
+                                            >
+                                        </div>
+
+                                        <button
+                                            type="button"
+                                            class="btn btn-sm btn-success mt-2 w-100"
+                                            id="btnAgregarPago"
+                                        >
+                                            <i class="bi bi-plus-circle"></i> Agregar Pago
+                                        </button>
+                                    </div>
+
+                                    <!-- Resumen de pagos -->
+                                    <div class="alert alert-info mt-2 py-2 mb-0">
+                                        <div class="d-flex justify-content-between">
+                                            <small><strong>Total a pagar:</strong></small>
+                                            <small><strong>Q<span id="totalAPagar">0.00</span></strong></small>
+                                        </div>
+                                        <div class="d-flex justify-content-between">
+                                            <small>Total pagos:</small>
+                                            <small class="text-primary">Q<span id="totalPagos">0.00</span></small>
+                                        </div>
+                                        <div class="d-flex justify-content-between">
+                                            <small>Pendiente:</small>
+                                            <small class="text-danger">Q<span id="pendientePago">0.00</span></small>
+                                        </div>
                                     </div>
                                 </div>
                                 

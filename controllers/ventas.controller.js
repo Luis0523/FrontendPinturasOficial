@@ -24,8 +24,7 @@ const VentasController = {
         carrito: [],
         clienteActivo: null,
         usuario: null,
-        metodoPago: 'EFECTIVO',
-        montoRecibido: 0,
+        pagos: [],  // Array de pagos múltiples
         paginaActual: 1,
         productosPorPagina: 12,
         terminoBusqueda: ''
@@ -40,6 +39,10 @@ const VentasController = {
         try {
             console.log('🚀 Inicializando POS...');
 
+            // Validar permisos de acceso
+            if (!requirePermission(Permissions.canAccessPOS)) {
+                return; // El requirePermission ya redirige
+            }
 
             // Cargar usuario actual
             this.cargarUsuario();
@@ -545,6 +548,9 @@ const VentasController = {
         document.getElementById('subtotal').textContent = this.formatearMoneda(subtotal);
         document.getElementById('descuento').textContent = this.formatearMoneda(descuento);
         document.getElementById('total').textContent = this.formatearMoneda(total);
+
+        // Actualizar también el resumen de pagos
+        this.renderizarPagos();
     },
 
     // ==================== CLIENTES ====================
@@ -708,6 +714,134 @@ const VentasController = {
         }
     },
 
+    // ==================== PAGOS MÚLTIPLES ====================
+
+    /**
+     * Agregar un pago al array
+     */
+    agregarPago() {
+        const metodo = document.getElementById('selectMetodoPago').value;
+        const montoInput = document.getElementById('inputMontoPago');
+        const referenciaInput = document.getElementById('inputReferencia');
+        const monto = parseFloat(montoInput.value);
+
+        // Validaciones
+        if (!monto || monto <= 0) {
+            this.mostrarError('Ingrese un monto válido');
+            montoInput.focus();
+            return;
+        }
+
+        const total = this.estado.carrito.reduce((sum, item) => sum + item.subtotal, 0);
+        const totalPagos = this.calcularTotalPagos();
+
+        if (totalPagos + monto > total) {
+            this.mostrarError(`El monto excede el total. Pendiente: Q${this.formatearMoneda(total - totalPagos)}`);
+            return;
+        }
+
+        // Crear objeto de pago
+        const pago = {
+            tipo: metodo,
+            monto: monto,
+            referencia: referenciaInput.value.trim() || null
+        };
+
+        // Agregar al array
+        this.estado.pagos.push(pago);
+
+        // Limpiar inputs
+        montoInput.value = '';
+        referenciaInput.value = '';
+        document.getElementById('selectMetodoPago').value = 'EFECTIVO';
+        document.getElementById('referenciaContainer').style.display = 'none';
+
+        // Actualizar vista
+        this.renderizarPagos();
+        montoInput.focus();
+    },
+
+    /**
+     * Eliminar un pago
+     */
+    eliminarPago(index) {
+        this.estado.pagos.splice(index, 1);
+        this.renderizarPagos();
+    },
+
+    /**
+     * Renderizar lista de pagos
+     */
+    renderizarPagos() {
+        const container = document.getElementById('listaPagos');
+        const total = this.estado.carrito.reduce((sum, item) => sum + item.subtotal, 0);
+        const totalPagos = this.calcularTotalPagos();
+        const pendiente = total - totalPagos;
+
+        // Iconos por método de pago
+        const iconos = {
+            'EFECTIVO': '💵',
+            'TARJETA_DEBITO': '💳',
+            'TARJETA_CREDITO': '💳',
+            'CHEQUE': '📝',
+            'TRANSFERENCIA': '🏦',
+            'DEPOSITO': '🏦'
+        };
+
+        // Renderizar lista
+        if (this.estado.pagos.length === 0) {
+            container.innerHTML = '';
+        } else {
+            container.innerHTML = this.estado.pagos.map((pago, index) => `
+                <div class="alert alert-success py-2 px-2 mb-1 d-flex justify-content-between align-items-center">
+                    <div>
+                        <small>
+                            <strong>${iconos[pago.tipo] || '💰'} ${this.formatearMetodoPago(pago.tipo)}</strong><br>
+                            ${pago.referencia ? `Ref: ${pago.referencia}` : ''}
+                        </small>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <strong class="text-success">Q${this.formatearMoneda(pago.monto)}</strong>
+                        <button
+                            type="button"
+                            class="btn btn-sm btn-danger"
+                            onclick="VentasController.eliminarPago(${index})"
+                        >
+                            <i class="bi bi-x-lg"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Actualizar resumen
+        document.getElementById('totalAPagar').textContent = this.formatearMoneda(total);
+        document.getElementById('totalPagos').textContent = this.formatearMoneda(totalPagos);
+        document.getElementById('pendientePago').textContent = this.formatearMoneda(pendiente);
+    },
+
+    /**
+     * Calcular total de pagos agregados
+     */
+    calcularTotalPagos() {
+        return this.estado.pagos.reduce((sum, pago) => sum + parseFloat(pago.monto), 0);
+    },
+
+    /**
+     * Formatear nombre del método de pago
+     */
+    formatearMetodoPago(tipo) {
+        const nombres = {
+            'EFECTIVO': 'Efectivo',
+            'TARJETA_DEBITO': 'Tarjeta Débito',
+            'TARJETA_CREDITO': 'Tarjeta Crédito',
+            'CHEQUE': 'Cheque',
+            'TRANSFERENCIA': 'Transferencia',
+            'DEPOSITO': 'Depósito'
+        };
+        return nombres[tipo] || tipo;
+    },
+
     // ==================== FACTURACIÓN ====================
 
     /**
@@ -731,9 +865,21 @@ const VentasController = {
                 return;
             }
 
-            // Confirmar facturación
-            const total = this.estado.carrito.reduce((sum, item) => sum + item.subtotal, 0);
+            // Validar pagos
+            if (this.estado.pagos.length === 0) {
+                this.mostrarError('Debe agregar al menos un método de pago');
+                return;
+            }
 
+            const total = this.estado.carrito.reduce((sum, item) => sum + item.subtotal, 0);
+            const totalPagos = this.calcularTotalPagos();
+
+            if (Math.abs(totalPagos - total) > 0.01) { // Tolerancia de 1 centavo
+                this.mostrarError(`La suma de pagos (Q${this.formatearMoneda(totalPagos)}) no coincide con el total (Q${this.formatearMoneda(total)})`);
+                return;
+            }
+
+            // Confirmar facturación
             if (!confirm(`¿Confirmar venta por Q${this.formatearMoneda(total)}?`)) {
                 return;
             }
@@ -768,12 +914,7 @@ const VentasController = {
                     precio_unitario: item.precio_unitario,
                     descuento_pct: item.descuento_pct || 0
                 })),
-                pagos: [
-                    {
-                        tipo: this.estado.metodoPago,
-                        monto: total
-                    }
-                ]
+                pagos: this.estado.pagos
             };
 
             // Mostrar loading
@@ -787,8 +928,10 @@ const VentasController = {
             if (response.success && response.data) {
                 // Limpiar estado
                 this.estado.carrito = [];
+                this.estado.pagos = [];
                 this.cargarClienteCF();
                 this.renderizarCarrito();
+                this.renderizarPagos();
                 this.calcularTotales();
 
                 // Recargar inventario
@@ -903,9 +1046,28 @@ const VentasController = {
         // this.guardarNuevoCliente();
         //});
 
-        // Método de pago
+        // Métodos de pago
         document.getElementById('selectMetodoPago').addEventListener('change', (e) => {
-            this.estado.metodoPago = e.target.value;
+            const metodo = e.target.value;
+            const referenciaContainer = document.getElementById('referenciaContainer');
+
+            // Mostrar campo de referencia para ciertos métodos
+            if (['CHEQUE', 'TRANSFERENCIA', 'DEPOSITO', 'TARJETA_DEBITO', 'TARJETA_CREDITO'].includes(metodo)) {
+                referenciaContainer.style.display = 'block';
+            } else {
+                referenciaContainer.style.display = 'none';
+            }
+        });
+
+        document.getElementById('btnAgregarPago').addEventListener('click', () => {
+            this.agregarPago();
+        });
+
+        // Enter en monto para agregar pago rápido
+        document.getElementById('inputMontoPago').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                this.agregarPago();
+            }
         });
 
         // Facturar
@@ -926,11 +1088,15 @@ const VentasController = {
      */
     limpiarTodo() {
         this.estado.carrito = [];
+        this.estado.pagos = [];
         this.cargarClienteCF();
         this.renderizarCarrito();
+        this.renderizarPagos();
         this.calcularTotales();
         document.getElementById('inputBuscarProducto').value = '';
         document.getElementById('inputBuscarCliente').value = '';
+        document.getElementById('inputMontoPago').value = '';
+        document.getElementById('inputReferencia').value = '';
         this.mostrarExito('POS reiniciado');
     },
 

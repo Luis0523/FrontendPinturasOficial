@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Perfil - Sistema de Pinturas</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+
+    <!-- Estilos personalizados -->
+    <link href="../../assets/css/style.css" rel="stylesheet">
+</head>
+
+<body>
+    <div class="main-wrapper">
+        <!-- Sidebar -->
+        <div id="sidebar-container"></div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Navbar -->
+            <div id="navbar-container"></div>
+
+            <!-- Content -->
+            <div class="content-wrapper">
+                <!-- Page Header -->
+                <div class="page-header">
+                    <h1 class="page-title">
+                        <i class="bi bi-person-circle me-2"></i>Mi Perfil
+                    </h1>
+                    <div class="page-breadcrumb">
+                        <i class="bi bi-house-door"></i>
+                        <span>Inicio</span>
+                        <i class="bi bi-chevron-right"></i>
+                        <span>Mi Perfil</span>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <!-- Columna izquierda - Tarjeta de Perfil -->
+                    <div class="col-lg-4 mb-4">
+                        <div class="card shadow-sm">
+                            <div class="card-body text-center">
+                                <div class="mb-3">
+                                    <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center"
+                                         style="width: 120px; height: 120px; font-size: 48px;"
+                                         id="profileAvatar">
+                                        JP
+                                    </div>
+                                </div>
+                                <h4 id="profileName">Juan Pérez</h4>
+                                <p class="text-muted mb-1" id="profileEmail">juan.perez@example.com</p>
+                                <p class="text-muted mb-3" id="profileRole">Administrador</p>
+
+                                <div class="border-top pt-3">
+                                    <div class="row text-center">
+                                        <div class="col-6">
+                                            <div class="small text-muted">Sucursal</div>
+                                            <div class="fw-bold" id="profileSucursal">-</div>
+                                        </div>
+                                        <div class="col-6">
+                                            <div class="small text-muted">Estado</div>
+                                            <div>
+                                                <span class="badge bg-success" id="profileEstado">Activo</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Info adicional -->
+                        <div class="card shadow-sm mt-3">
+                            <div class="card-body">
+                                <h6 class="card-title mb-3">
+                                    <i class="bi bi-info-circle me-2"></i>Información Adicional
+                                </h6>
+                                <ul class="list-unstyled mb-0">
+                                    <li class="mb-2">
+                                        <i class="bi bi-telephone me-2 text-muted"></i>
+                                        <span id="profileTelefono">-</span>
+                                    </li>
+                                    <li class="mb-2">
+                                        <i class="bi bi-card-text me-2 text-muted"></i>
+                                        DPI: <span id="profileDPI">-</span>
+                                    </li>
+                                    <li class="mb-2">
+                                        <i class="bi bi-geo-alt me-2 text-muted"></i>
+                                        <span id="profileDireccion">-</span>
+                                    </li>
+                                    <li>
+                                        <i class="bi bi-calendar me-2 text-muted"></i>
+                                        Miembro desde: <span id="profileFechaRegistro">-</span>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Columna derecha - Formularios -->
+                    <div class="col-lg-8">
+                        <!-- Tabs -->
+                        <ul class="nav nav-tabs mb-4" id="profileTabs" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="datos-tab" data-bs-toggle="tab" data-bs-target="#datos" type="button" role="tab">
+                                    <i class="bi bi-person me-2"></i>Datos Personales
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="password-tab" data-bs-toggle="tab" data-bs-target="#password" type="button" role="tab">
+                                    <i class="bi bi-shield-lock me-2"></i>Cambiar Contraseña
+                                </button>
+                            </li>
+                        </ul>
+
+                        <div class="tab-content" id="profileTabContent">
+                            <!-- Tab Datos Personales -->
+                            <div class="tab-pane fade show active" id="datos" role="tabpanel">
+                                <div class="card shadow-sm">
+                                    <div class="card-header bg-white">
+                                        <h5 class="mb-0">Editar Datos Personales</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <form id="formDatosPersonales">
+                                            <input type="hidden" id="usuario_id">
+
+                                            <div class="row g-3">
+                                                <div class="col-md-6">
+                                                    <label class="form-label">Nombre Completo *</label>
+                                                    <input type="text" class="form-control" id="edit_nombre" required>
+                                                </div>
+
+                                                <div class="col-md-6">
+                                                    <label class="form-label">Email *</label>
+                                                    <input type="email" class="form-control" id="edit_email" required>
+                                                </div>
+
+                                                <div class="col-md-6">
+                                                    <label class="form-label">Teléfono</label>
+                                                    <input type="tel" class="form-control" id="edit_telefono">
+                                                </div>
+
+                                                <div class="col-md-6">
+                                                    <label class="form-label">DPI</label>
+                                                    <input type="text" class="form-control" id="edit_dpi">
+                                                </div>
+
+                                                <div class="col-12">
+                                                    <label class="form-label">Dirección</label>
+                                                    <textarea class="form-control" id="edit_direccion" rows="2"></textarea>
+                                                </div>
+                                            </div>
+
+                                            <div class="mt-4">
+                                                <button type="submit" class="btn btn-primary" id="btnGuardarDatos">
+                                                    <i class="bi bi-check-circle me-2"></i>Guardar Cambios
+                                                </button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Tab Cambiar Contraseña -->
+                            <div class="tab-pane fade" id="password" role="tabpanel">
+                                <div class="card shadow-sm">
+                                    <div class="card-header bg-white">
+                                        <h5 class="mb-0">Cambiar Contraseña</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="alert alert-info">
+                                            <i class="bi bi-info-circle me-2"></i>
+                                            La contraseña debe tener al menos 6 caracteres.
+                                        </div>
+
+                                        <form id="formCambiarPassword">
+                                            <div class="row g-3">
+                                                <div class="col-12">
+                                                    <label class="form-label">Contraseña Actual *</label>
+                                                    <div class="input-group">
+                                                        <input type="password" class="form-control" id="password_actual" required>
+                                                        <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('password_actual')">
+                                                            <i class="bi bi-eye"></i>
+                                                        </button>
+                                                    </div>
+                                                </div>
+
+                                                <div class="col-12">
+                                                    <label class="form-label">Nueva Contraseña *</label>
+                                                    <div class="input-group">
+                                                        <input type="password" class="form-control" id="password_nueva" required minlength="6">
+                                                        <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('password_nueva')">
+                                                            <i class="bi bi-eye"></i>
+                                                        </button>
+                                                    </div>
+                                                </div>
+
+                                                <div class="col-12">
+                                                    <label class="form-label">Confirmar Nueva Contraseña *</label>
+                                                    <div class="input-group">
+                                                        <input type="password" class="form-control" id="password_confirmar" required minlength="6">
+                                                        <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('password_confirmar')">
+                                                            <i class="bi bi-eye"></i>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="mt-4">
+                                                <button type="submit" class="btn btn-warning" id="btnCambiarPassword">
+                                                    <i class="bi bi-shield-lock me-2"></i>Cambiar Contraseña
+                                                </button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Axios -->
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+    <!-- Utilities -->
+    <script src="../../utils/storage.js"></script>
+    <script src="../../utils/alerts.js"></script>
+    <script src="../../utils/loader.js"></script>
+    <script src="../../utils/formatter.js"></script>
+
+    <!-- Config -->
+    <script src="../../config/api.js"></script>
+
+    <!-- Services -->
+    <script src="../../services/auth.service.js"></script>
+    <script src="../../services/usuarios.service.js"></script>
+
+    <!-- Layout -->
+    <script src="../../utils/layout.js"></script>
+
+    <!-- Script inline -->
+    <script>
+        const PerfilController = {
+            currentUser: null,
+
+            async init() {
+                if (!AuthService.requireAuth()) {
+                    return;
+                }
+
+                await loadLayout();
+                this.currentUser = Storage.getUser();
+                await this.cargarDatosUsuario();
+                this.setupEventListeners();
+            },
+
+            async cargarDatosUsuario() {
+                try {
+                    Loader.show('Cargando perfil...');
+
+                    const response = await axios.get(`/usuarios/${this.currentUser.id}`);
+                    const usuario = response.data.data;
+
+                    // Llenar datos en la tarjeta
+                    document.getElementById('profileName').textContent = usuario.nombre || '-';
+                    document.getElementById('profileEmail').textContent = usuario.email || '-';
+                    document.getElementById('profileRole').textContent = usuario.rol?.nombre || usuario.Rol?.nombre || '-';
+                    document.getElementById('profileSucursal').textContent = usuario.sucursal?.nombre || usuario.Sucursal?.nombre || '-';
+                    document.getElementById('profileTelefono').textContent = usuario.telefono || '-';
+                    document.getElementById('profileDPI').textContent = usuario.dpi || '-';
+                    document.getElementById('profileDireccion').textContent = usuario.direccion || '-';
+                    document.getElementById('profileEstado').textContent = usuario.activo ? 'Activo' : 'Inactivo';
+                    document.getElementById('profileEstado').className = usuario.activo ? 'badge bg-success' : 'badge bg-danger';
+
+                    if (usuario.createdAt) {
+                        const fecha = new Date(usuario.createdAt);
+                        document.getElementById('profileFechaRegistro').textContent = fecha.toLocaleDateString('es-GT');
+                    }
+
+                    // Avatar
+                    const iniciales = usuario.nombre.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+                    document.getElementById('profileAvatar').textContent = iniciales;
+
+                    // Llenar formulario de edición
+                    document.getElementById('usuario_id').value = usuario.id;
+                    document.getElementById('edit_nombre').value = usuario.nombre || '';
+                    document.getElementById('edit_email').value = usuario.email || '';
+                    document.getElementById('edit_telefono').value = usuario.telefono || '';
+                    document.getElementById('edit_dpi').value = usuario.dpi || '';
+                    document.getElementById('edit_direccion').value = usuario.direccion || '';
+
+                    Loader.hide();
+                } catch (error) {
+                    Loader.hide();
+                    console.error('Error cargando perfil:', error);
+                    Alerts.error('Error al cargar los datos del perfil');
+                }
+            },
+
+            setupEventListeners() {
+                document.getElementById('formDatosPersonales').addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.guardarDatosPersonales();
+                });
+
+                document.getElementById('formCambiarPassword').addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.cambiarPassword();
+                });
+            },
+
+            async guardarDatosPersonales() {
+                try {
+                    const usuarioId = document.getElementById('usuario_id').value;
+                    const datos = {
+                        nombre: document.getElementById('edit_nombre').value,
+                        email: document.getElementById('edit_email').value,
+                        telefono: document.getElementById('edit_telefono').value || null,
+                        dpi: document.getElementById('edit_dpi').value || null,
+                        direccion: document.getElementById('edit_direccion').value || null
+                    };
+
+                    const btnGuardar = document.getElementById('btnGuardarDatos');
+                    Loader.showInButton(btnGuardar, 'Guardando...');
+
+                    await axios.put(`/usuarios/${usuarioId}`, datos);
+
+                    // Actualizar usuario en storage
+                    const updatedUser = { ...this.currentUser, ...datos };
+                    Storage.setUser(updatedUser);
+
+                    Loader.hideInButton(btnGuardar);
+                    Alerts.success('Datos actualizados correctamente');
+
+                    await this.cargarDatosUsuario();
+
+                } catch (error) {
+                    const btnGuardar = document.getElementById('btnGuardarDatos');
+                    Loader.hideInButton(btnGuardar);
+                    console.error('Error guardando datos:', error);
+                    Alerts.error(error.response?.data?.message || 'Error al guardar los datos');
+                }
+            },
+
+            async cambiarPassword() {
+                try {
+                    const passwordActual = document.getElementById('password_actual').value;
+                    const passwordNueva = document.getElementById('password_nueva').value;
+                    const passwordConfirmar = document.getElementById('password_confirmar').value;
+
+                    // Validar que las contraseñas coincidan
+                    if (passwordNueva !== passwordConfirmar) {
+                        Alerts.error('Las contraseñas nuevas no coinciden');
+                        return;
+                    }
+
+                    if (passwordNueva.length < 6) {
+                        Alerts.error('La contraseña debe tener al menos 6 caracteres');
+                        return;
+                    }
+
+                    const btnCambiar = document.getElementById('btnCambiarPassword');
+                    Loader.showInButton(btnCambiar, 'Cambiando...');
+
+                    await axios.patch(`/usuarios/${this.currentUser.id}/cambiar-password`, {
+                        passwordActual,
+                        passwordNueva
+                    });
+
+                    Loader.hideInButton(btnCambiar);
+                    Alerts.success('Contraseña cambiada correctamente');
+
+                    // Limpiar formulario
+                    document.getElementById('formCambiarPassword').reset();
+
+                } catch (error) {
+                    const btnCambiar = document.getElementById('btnCambiarPassword');
+                    Loader.hideInButton(btnCambiar);
+                    console.error('Error cambiando contraseña:', error);
+                    Alerts.error(error.response?.data?.message || 'Error al cambiar la contraseña');
+                }
+            }
+        };
+
+        function togglePassword(inputId) {
+            const input = document.getElementById(inputId);
+            const icon = event.currentTarget.querySelector('i');
+
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.remove('bi-eye');
+                icon.classList.add('bi-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.remove('bi-eye-slash');
+                icon.classList.add('bi-eye');
+            }
+        }
+
+        // Inicializar
+        document.addEventListener('DOMContentLoaded', () => {
+            PerfilController.init();
+        });
+    </script>
+</body>
+</html>

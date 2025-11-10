@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reportes y Estadísticas - Sistema de Pinturas</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+
+    <!-- Estilos personalizados -->
+    <link href="../../assets/css/style.css" rel="stylesheet">
+</head>
+
+<body>
+    <div class="main-wrapper">
+        <!-- Sidebar -->
+        <div id="sidebar-container"></div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Navbar -->
+            <div id="navbar-container"></div>
+
+            <!-- Content -->
+            <div class="content-wrapper">
+                <!-- Page Header -->
+                <div class="page-header">
+                    <h1 class="page-title">
+                        <i class="bi bi-graph-up-arrow me-2"></i>Reportes y Estadísticas
+                    </h1>
+                    <div class="page-breadcrumb">
+                        <i class="bi bi-house-door"></i>
+                        <span>Inicio</span>
+                        <i class="bi bi-chevron-right"></i>
+                        <span>Reportes</span>
+                    </div>
+                </div>
+
+                <!-- Resumen Cards -->
+                <div class="row g-3 mb-4">
+                    <div class="col-md-3">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <p class="text-muted mb-1">Ventas Hoy</p>
+                                        <h3 class="mb-0">Q<span id="ventasHoy">0.00</span></h3>
+                                    </div>
+                                    <div class="bg-primary bg-opacity-10 p-3 rounded">
+                                        <i class="bi bi-cash-stack text-primary fs-2"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-3">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <p class="text-muted mb-1">Ventas Semana</p>
+                                        <h3 class="mb-0">Q<span id="ventasSemana">0.00</span></h3>
+                                    </div>
+                                    <div class="bg-success bg-opacity-10 p-3 rounded">
+                                        <i class="bi bi-calendar-week text-success fs-2"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-3">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <p class="text-muted mb-1">Ventas Mes</p>
+                                        <h3 class="mb-0">Q<span id="ventasMes">0.00</span></h3>
+                                    </div>
+                                    <div class="bg-info bg-opacity-10 p-3 rounded">
+                                        <i class="bi bi-calendar3 text-info fs-2"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-3">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <p class="text-muted mb-1">Facturas Hoy</p>
+                                        <h3 class="mb-0"><span id="facturasHoy">0</span></h3>
+                                    </div>
+                                    <div class="bg-warning bg-opacity-10 p-3 rounded">
+                                        <i class="bi bi-receipt text-warning fs-2"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Filtros de Fecha -->
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <div class="row g-3 align-items-end">
+                            <div class="col-md-2">
+                                <label class="form-label fw-bold">Mes</label>
+                                <select class="form-select" id="selectMes">
+                                    <option value="1">Enero</option>
+                                    <option value="2">Febrero</option>
+                                    <option value="3">Marzo</option>
+                                    <option value="4">Abril</option>
+                                    <option value="5">Mayo</option>
+                                    <option value="6">Junio</option>
+                                    <option value="7">Julio</option>
+                                    <option value="8">Agosto</option>
+                                    <option value="9">Septiembre</option>
+                                    <option value="10">Octubre</option>
+                                    <option value="11">Noviembre</option>
+                                    <option value="12">Diciembre</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label fw-bold">Año</label>
+                                <select class="form-select" id="selectAnio">
+                                    <!-- Se llenará dinámicamente -->
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label fw-bold">Ver Ventas del Día</label>
+                                <input type="date" class="form-control" id="inputFechaDia">
+                            </div>
+                            <div class="col-md-2">
+                                <button class="btn btn-primary w-100" onclick="ReportesController.cargarVentasDia()">
+                                    <i class="bi bi-search"></i> Buscar Día
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Gráfica Comparativa: Compras vs Ventas -->
+                <div class="card mb-4">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0">
+                            <i class="bi bi-graph-up me-2"></i>
+                            Comparativa: Compras vs Ventas (Mensual)
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="chartComprasVsVentas" height="80"></canvas>
+                    </div>
+                </div>
+
+                <!-- Gráficas de Pastel -->
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header bg-white">
+                                <h5 class="mb-0">
+                                    <i class="bi bi-pie-chart me-2"></i>
+                                    Ventas por Categoría
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <canvas id="chartVentasCategorias" height="200"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header bg-white">
+                                <h5 class="mb-0">
+                                    <i class="bi bi-credit-card me-2"></i>
+                                    Métodos de Pago
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <canvas id="chartMetodosPago" height="200"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Top Productos -->
+                <div class="card mb-4">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0">
+                            <i class="bi bi-trophy me-2"></i>
+                            Top 10 Productos Más Vendidos
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Producto</th>
+                                        <th>Presentación</th>
+                                        <th class="text-end">Cantidad</th>
+                                        <th class="text-end">Total Vendido</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tablaTopProductos">
+                                    <tr>
+                                        <td colspan="5" class="text-center">
+                                            <div class="spinner-border" role="status">
+                                                <span class="visually-hidden">Cargando...</span>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Ventas del Día (Se muestra al buscar) -->
+                <div class="card mb-4" id="cardVentasDia" style="display: none;">
+                    <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="bi bi-calendar-day me-2"></i>
+                            Ventas del Día: <span id="fechaSeleccionada"></span>
+                        </h5>
+                        <button class="btn btn-sm btn-outline-secondary" onclick="document.getElementById('cardVentasDia').style.display='none'">
+                            <i class="bi bi-x-lg"></i>
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-info mb-3">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <strong>Total de Facturas:</strong> <span id="totalFacturasDia">0</span>
+                                </div>
+                                <div class="col-md-6">
+                                    <strong>Total en Ventas:</strong> Q<span id="totalVentasDia">0.00</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Factura</th>
+                                        <th>Cliente</th>
+                                        <th>Usuario</th>
+                                        <th class="text-end">Total</th>
+                                        <th>Hora</th>
+                                        <th class="text-center">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tablaVentasDia">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Detalles de Venta -->
+    <div class="modal fade" id="modalDetalleVenta" tabindex="-1" aria-labelledby="modalDetalleVentaLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalDetalleVentaLabel">
+                        <i class="bi bi-receipt me-2"></i>Detalles de Venta
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Loading -->
+                    <div id="detalleVentaLoading" class="text-center py-4">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Cargando...</span>
+                        </div>
+                        <p class="mt-2">Cargando detalles...</p>
+                    </div>
+
+                    <!-- Contenido del detalle -->
+                    <div id="detalleVentaContenido" style="display: none;">
+                        <!-- Información de la Factura -->
+                        <div class="card mb-3">
+                            <div class="card-header bg-primary text-white">
+                                <strong>Factura: <span id="detalleNumeroFactura"></span></strong>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <p><strong>Cliente:</strong> <span id="detalleCliente"></span></p>
+                                        <p><strong>NIT:</strong> <span id="detalleNit"></span></p>
+                                        <p><strong>Dirección:</strong> <span id="detalleDireccion"></span></p>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <p><strong>Usuario:</strong> <span id="detalleUsuario"></span></p>
+                                        <p><strong>Fecha:</strong> <span id="detalleFecha"></span></p>
+                                        <p><strong>Hora:</strong> <span id="detalleHora"></span></p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Productos -->
+                        <div class="card mb-3">
+                            <div class="card-header">
+                                <strong>Productos</strong>
+                            </div>
+                            <div class="card-body p-0">
+                                <div class="table-responsive">
+                                    <table class="table table-sm mb-0">
+                                        <thead>
+                                            <tr>
+                                                <th>Producto</th>
+                                                <th>Presentación</th>
+                                                <th class="text-end">Cantidad</th>
+                                                <th class="text-end">Precio</th>
+                                                <th class="text-end">Subtotal</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="detalleProductos">
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Pagos -->
+                        <div class="card mb-3">
+                            <div class="card-header">
+                                <strong>Pagos</strong>
+                            </div>
+                            <div class="card-body p-0">
+                                <div class="table-responsive">
+                                    <table class="table table-sm mb-0">
+                                        <thead>
+                                            <tr>
+                                                <th>Método de Pago</th>
+                                                <th>Referencia</th>
+                                                <th class="text-end">Monto</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="detallePagos">
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Totales -->
+                        <div class="card">
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-6 offset-md-6">
+                                        <table class="table table-sm">
+                                            <tr>
+                                                <th>Subtotal:</th>
+                                                <td class="text-end">Q<span id="detalleSubtotal">0.00</span></td>
+                                            </tr>
+                                            <tr>
+                                                <th>Descuento:</th>
+                                                <td class="text-end">Q<span id="detalleDescuento">0.00</span></td>
+                                            </tr>
+                                            <tr>
+                                                <th>IVA:</th>
+                                                <td class="text-end">Q<span id="detalleIva">0.00</span></td>
+                                            </tr>
+                                            <tr class="table-primary">
+                                                <th>TOTAL:</th>
+                                                <th class="text-end">Q<span id="detalleTotal">0.00</span></th>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-circle me-1"></i>Cerrar
+                    </button>
+                    <button type="button" class="btn btn-primary" id="btnReimprimirFactura">
+                        <i class="bi bi-printer me-1"></i>Reimprimir Factura
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Axios -->
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+    <!-- Config -->
+    <script src="../../config/api.js"></script>
+
+    <!-- Utilities -->
+    <script src="../../utils/storage.js"></script>
+    <script src="../../utils/permissions.js"></script>
+    <script src="../../utils/alerts.js"></script>
+    <script src="../../utils/loader.js"></script>
+    <script src="../../utils/formatter.js"></script>
+
+    <!-- Services -->
+    <script src="../../services/auth.service.js"></script>
+    <script src="../../services/reportes.service.js"></script>
+
+    <!-- App principal (contiene loadLayout y logout) -->
+    <script src="../../assets/js/app.js"></script>
+
+    <!-- Controlador -->
+    <script src="../../controllers/reportes.controller.js"></script>
+
+    <!-- Inicializar -->
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Cargar layout (navbar + sidebar)
+            await loadLayout();
+
+            // Inicializar controller
+            await ReportesController.init();
+        });
+    </script>
+</body>
+</html>
