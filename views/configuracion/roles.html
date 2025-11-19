@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Roles - Sistema de Pinturas</title>
+
+    
+    <link href="https:
+
+    
+    <link href="https:
+
+    
+    <link href="../../assets/css/style.css" rel="stylesheet">
+    <link href="../../assets/css/dashboard.css" rel="stylesheet">
+</head>
+
+<body>
+    <div class="main-wrapper">
+        
+        <div id="sidebar-container"></div>
+
+        
+        <div class="main-content">
+            
+            <div id="navbar-container"></div>
+
+            
+            <div class="content-wrapper">
+                
+                <div class="page-header">
+                    <h1 class="page-title">
+                        <i class="bi bi-shield-check me-2"></i>Gestión de Roles
+                    </h1>
+                    <div class="page-breadcrumb">
+                        <i class="bi bi-house-door"></i>
+                        <span>Inicio</span>
+                        <i class="bi bi-chevron-right"></i>
+                        <span>Configuración</span>
+                        <i class="bi bi-chevron-right"></i>
+                        <span>Roles</span>
+                    </div>
+                </div>
+
+                
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <div class="row g-3 align-items-center">
+                            <div class="col-md-8">
+                                <div class="input-group">
+                                    <span class="input-group-text">
+                                        <i class="bi bi-search"></i>
+                                    </span>
+                                    <input type="text" class="form-control" id="searchInput" placeholder="Buscar rol...">
+                                </div>
+                            </div>
+                            <div class="col-md-4 text-end">
+                                <button class="btn btn-primary" onclick="RolesController.openCreateModal()">
+                                    <i class="bi bi-plus-circle me-2"></i>Nuevo Rol
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                
+                <div class="alert alert-info d-flex align-items-center mb-4" role="alert">
+                    <i class="bi bi-info-circle-fill fs-4 me-3"></i>
+                    <div>
+                        <strong>Información:</strong> Los roles del sistema (Administrador, Gerente, Cajero, Bodeguero, Vendedor) no pueden ser eliminados.
+                    </div>
+                </div>
+
+                
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th width="80">ID</th>
+                                        <th>Nombre del Rol</th>
+                                        <th width="150" class="text-center">Usuarios</th>
+                                        <th width="150" class="text-center">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="rolesTableBody">
+                                    <tr>
+                                        <td colspan="4" class="text-center py-4">
+                                            <div class="spinner-border text-primary" role="status">
+                                                <span class="visually-hidden">Cargando...</span>
+                                            </div>
+                                            <p class="text-muted mt-2 mb-0">Cargando roles...</p>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    
+    <div class="modal fade" id="modalRol" tabindex="-1" data-bs-backdrop="static">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalRolTitle">
+                        <i class="bi bi-shield-plus me-2"></i>Nuevo Rol
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="rolForm" novalidate>
+                    <div class="modal-body">
+                        <input type="hidden" id="rolId">
+
+                        <div class="mb-3">
+                            <label for="rolNombre" class="form-label">
+                                Nombre del Rol <span class="text-danger">*</span>
+                            </label>
+                            <input 
+                                type="text" 
+                                class="form-control" 
+                                id="rolNombre" 
+                                placeholder="Ej: Supervisor"
+                                required
+                                maxlength="50"
+                            >
+                            <div class="invalid-feedback">
+                                Por favor ingrese el nombre del rol
+                            </div>
+                            <div class="form-text">
+                                <i class="bi bi-info-circle me-1"></i>
+                                El nombre debe ser único y descriptivo
+                            </div>
+                        </div>
+
+                        <div class="alert alert-warning d-flex align-items-start" role="alert">
+                            <i class="bi bi-exclamation-triangle-fill fs-5 me-2"></i>
+                            <div>
+                                <strong>Importante:</strong>
+                                <ul class="mb-0 mt-1 small">
+                                    <li>Los permisos asociados al rol se configuran en el código</li>
+                                    <li>Asegúrese de actualizar el archivo <code>permissions.js</code> después de crear el rol</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="bi bi-x-circle me-2"></i>Cancelar
+                        </button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle me-2"></i>Guardar
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    
+    <script src="https:
+    <script src="https:
+
+    
+    <script src="../../utils/storage.js"></script>
+    <script src="../../utils/formatter.js"></script>
+    <script src="../../utils/validator.js"></script>
+    <script src="../../utils/alerts.js"></script>
+    <script src="../../utils/loader.js"></script>
+    <script src="../../utils/permissions.js"></script>
+
+    
+    <script src="../../config/api.js"></script>
+
+    
+    <script src="../../assets/js/app.js"></script>
+
+    
+    <script src="../../services/auth.service.js"></script>
+    <script src="../../services/roles.service.js"></script>
+
+    
+    <script src="../../controllers/roles.controller.js"></script>
+
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                
+                await loadLayout();
+
+                
+                await RolesController.init();
+                
+            } catch (error) {
+                console.error('❌ Error al inicializar:', error);
+                Alerts.error('Error al cargar la página: ' + error.message);
+            }
+        });
+    </script>
+</body>
+</html>

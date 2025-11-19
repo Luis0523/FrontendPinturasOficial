@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout - Pinturas Premium</title>
+
+    
+   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    
+    <link rel="stylesheet" href="../assets/css/public.css">
+</head>
+<body>
+
+    
+    <nav class="navbar navbar-expand-lg navbar-public sticky-top">
+        <div class="container">
+            <a class="navbar-brand" href="../index.html">
+                <i class="bi bi-paint-bucket"></i>
+                Pinturas Premium
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-center">
+                    <li class="nav-item">
+                        <a class="nav-link" href="../index.html#inicio">Inicio</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="catalogo.html">Catálogo</a>
+                    </li>
+                    <li class="nav-item ms-3 position-relative">
+                        <a href="checkout.html" class="btn btn-agregar active">
+                            <i class="bi bi-cart3"></i> Carrito
+                            <span id="carritoContador" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="display: none;">
+                                0
+                            </span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    
+    <section class="py-5">
+        <div class="container">
+
+            
+            <div class="row mb-4">
+                <div class="col-12">
+                    <h1 class="display-5 fw-bold" style="color: var(--rojo-principal);">
+                        <i class="bi bi-cart-check"></i> Finalizar Compra
+                    </h1>
+                    <p class="text-muted">Completa tu información para procesar tu pedido</p>
+                </div>
+            </div>
+
+            
+            <div id="carritoVacio" class="row" style="display: none;">
+                <div class="col-12 text-center py-5">
+                    <i class="bi bi-cart-x" style="font-size: 5rem; color: var(--texto-claro);"></i>
+                    <h3 class="mt-3" style="color: var(--texto-medio);">Tu carrito está vacío</h3>
+                    <p style="color: var(--texto-claro);">Agrega productos desde nuestro catálogo</p>
+                    <a href="catalogo.html" class="btn btn-agregar btn-lg mt-3">
+                        <i class="bi bi-bag"></i> Ir al Catálogo
+                    </a>
+                </div>
+            </div>
+
+            
+            <div id="checkoutContent" class="row">
+
+                
+                <div class="col-lg-8 mb-4">
+
+                    
+                    <div class="card border-0 shadow-sm mb-4">
+                        <div class="card-header" style="background: var(--rojo-principal); color: var(--blanco);">
+                            <h5 class="mb-0">
+                                <i class="bi bi-person-circle"></i> Información Personal
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="nombre_cliente" class="form-label fw-bold">Nombre Completo *</label>
+                                    <input type="text" class="form-control" id="nombre_cliente" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="telefono_cliente" class="form-label fw-bold">Teléfono *</label>
+                                    <input type="tel" class="form-control" id="telefono_cliente" required>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="email_cliente" class="form-label fw-bold">Email *</label>
+                                    <input type="email" class="form-control" id="email_cliente" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="nit_cliente" class="form-label fw-bold">NIT (opcional)</label>
+                                    <input type="text" class="form-control" id="nit_cliente" value="CF">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    
+                    <div class="card border-0 shadow-sm mb-4">
+                        <div class="card-header" style="background: var(--rojo-principal); color: var(--blanco);">
+                            <h5 class="mb-0">
+                                <i class="bi bi-geo-alt-fill"></i> Dirección de Envío
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label for="direccion_envio" class="form-label fw-bold">Dirección Completa *</label>
+                                <textarea class="form-control" id="direccion_envio" rows="2" required></textarea>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="ciudad_envio" class="form-label fw-bold">Ciudad *</label>
+                                    <input type="text" class="form-control" id="ciudad_envio" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="departamento_envio" class="form-label fw-bold">Departamento *</label>
+                                    <input type="text" class="form-control" id="departamento_envio" required>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="codigo_postal" class="form-label fw-bold">Código Postal (opcional)</label>
+                                    <input type="text" class="form-control" id="codigo_postal">
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="referencias_direccion" class="form-label fw-bold">Referencias (opcional)</label>
+                                <textarea class="form-control" id="referencias_direccion" rows="2"
+                                    placeholder="Ej: Casa de dos pisos, portón blanco, frente al parque..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    
+                    <div class="card border-0 shadow-sm mb-4">
+                        <div class="card-header" style="background: var(--rojo-principal); color: var(--blanco);">
+                            <h5 class="mb-0">
+                                <i class="bi bi-credit-card"></i> Método de Pago
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label for="tipo_pago" class="form-label fw-bold">Selecciona tu método de pago *</label>
+                                <select class="form-select" id="tipo_pago" required>
+                                    <option value="">-- Selecciona --</option>
+                                    <option value="TARJETA_CREDITO">Tarjeta de Crédito</option>
+                                    <option value="TARJETA_DEBITO">Tarjeta de Débito</option>
+                                    <option value="TRANSFERENCIA">Transferencia Bancaria</option>
+                                    <option value="DEPOSITO">Depósito Bancario</option>
+                                </select>
+                            </div>
+                            <div id="infoMetodoPago" style="display: none;">
+                                <div class="alert alert-info">
+                                    <strong><i class="bi bi-info-circle"></i> Información de Pago:</strong>
+                                    <p class="mb-0 mt-2" id="textInfoPago">
+                                        Te contactaremos para procesar el pago de forma segura.
+                                    </p>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="referencia_pago" class="form-label fw-bold">Referencia / Número de transacción (opcional)</label>
+                                    <input type="text" class="form-control" id="referencia_pago">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header" style="background: var(--rojo-principal); color: var(--blanco);">
+                            <h5 class="mb-0">
+                                <i class="bi bi-chat-left-text"></i> Notas Adicionales (Opcional)
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <textarea class="form-control" id="notas_cliente" rows="3"
+                                placeholder="Instrucciones especiales, preferencias de entrega, etc."></textarea>
+                        </div>
+                    </div>
+
+                </div>
+
+                
+                <div class="col-lg-4">
+                    <div class="card border-0 shadow-sm sticky-top" style="top: 90px;">
+                        <div class="card-header" style="background: var(--rojo-principal); color: var(--blanco);">
+                            <h5 class="mb-0">
+                                <i class="bi bi-receipt"></i> Resumen del Pedido
+                            </h5>
+                        </div>
+                        <div class="card-body">
+
+                            
+                            <div id="resumenItems" class="mb-3" style="max-height: 300px; overflow-y: auto;">
+                                
+                            </div>
+
+                            <hr>
+
+                            
+                            <div class="mb-2 d-flex justify-content-between">
+                                <span class="text-muted">Subtotal:</span>
+                                <strong>Q. <span id="resumenSubtotal">0.00</span></strong>
+                            </div>
+                            <div class="mb-2 d-flex justify-content-between">
+                                <span class="text-muted">Descuentos:</span>
+                                <strong class="text-success">- Q. <span id="resumenDescuento">0.00</span></strong>
+                            </div>
+                            <div class="mb-3 d-flex justify-content-between">
+                                <span class="text-muted">Cantidad de Items:</span>
+                                <strong><span id="resumenCantidad">0</span></strong>
+                            </div>
+
+                            <hr>
+
+                            <div class="mb-3 d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">Total:</h5>
+                                <h4 class="mb-0" style="color: var(--rojo-principal);">
+                                    Q. <span id="resumenTotal">0.00</span>
+                                </h4>
+                            </div>
+
+                            
+                            <button class="btn btn-agregar w-100 mb-2" onclick="CheckoutController.procesarPedido()">
+                                <i class="bi bi-check-circle"></i> Confirmar Pedido
+                            </button>
+                            <a href="catalogo.html" class="btn btn-outline-secondary w-100">
+                                <i class="bi bi-arrow-left"></i> Seguir Comprando
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </section>
+
+    
+    <div id="checkoutLoader" class="loader-container" style="display: none;">
+        <div class="loader"></div>
+        <p class="mt-3">Procesando tu pedido...</p>
+    </div>
+
+    
+    <div class="toast-container position-fixed bottom-0 end-0 p-3" id="toastContainer"></div>
+
+    
+      <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script src="../config/api.js"></script>
+
+    
+    <script src="../services/pedidos.service.js"></script>
+
+    
+    <script src="../controllers/carrito.controller.js"></script>
+    <script src="../controllers/checkout.controller.js"></script>
+
+</body>
+</html>

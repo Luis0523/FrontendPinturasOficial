@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Facturas - Sistema de Pinturas</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="../../assets/css/style.css">
+</head>
+<body>
+
+    <div id="navbar-container"></div>
+
+    <div class="main-wrapper">
+        <div id="sidebar-container"></div>
+
+        <main class="main-content">
+            <div class="container-fluid">
+
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h2><i class="bi bi-receipt"></i> Gestión de Facturas</h2>
+                        <p class="text-muted">Consulta y anula facturas emitidas</p>
+                    </div>
+                    <div>
+                        <span class="badge bg-primary" id="badgeEstadisticas">0 facturas</span>
+                    </div>
+                </div>
+
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0"><i class="bi bi-funnel"></i> Filtros de Búsqueda</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+
+                            <div class="col-md-3">
+                                <label class="form-label">Fecha Desde</label>
+                                <input type="date" class="form-control" id="filtroDesde">
+                            </div>
+
+                            <div class="col-md-3">
+                                <label class="form-label">Fecha Hasta</label>
+                                <input type="date" class="form-control" id="filtroHasta">
+                            </div>
+
+                            <div class="col-md-2">
+                                <label class="form-label">Estado</label>
+                                <select class="form-select" id="filtroEstado">
+                                    <option value="">Todos</option>
+                                    <option value="EMITIDA">Emitida</option>
+                                    <option value="ANULADA">Anulada</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-2">
+                                <label class="form-label">Serie</label>
+                                <select class="form-select" id="filtroSerie">
+                                    <option value="">Todas</option>
+                                    <option value="A">Serie A</option>
+                                    <option value="B">Serie B</option>
+                                    <option value="C">Serie C</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-2 d-flex align-items-end gap-2">
+                                <button class="btn btn-primary flex-fill" id="btnFiltrar">
+                                    <i class="bi bi-search"></i> Filtrar
+                                </button>
+                                <button class="btn btn-outline-secondary" id="btnLimpiarFiltros">
+                                    <i class="bi bi-x-circle"></i>
+                                </button>
+                            </div>
+
+                        </div>
+
+                        <div class="row mt-3">
+                            <div class="col-md-12">
+                                <label class="form-label">Búsqueda Rápida</label>
+                                <input type="text"
+                                       class="form-control"
+                                       id="filtroBusqueda"
+                                       placeholder="Buscar por número de factura, serie o cliente...">
+                                <small class="text-muted">Escribe para filtrar las facturas cargadas</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card shadow-sm">
+                    <div class="card-header bg-white">
+                        <h5 class="mb-0"><i class="bi bi-list-ul"></i> Listado de Facturas</h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Número</th>
+                                        <th>Fecha</th>
+                                        <th>Cliente</th>
+                                        <th>NIT</th>
+                                        <th class="text-end">Total</th>
+                                        <th>Estado</th>
+                                        <th width="200">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tablaFacturasBody">
+                                    <tr>
+                                        <td colspan="7" class="text-center py-5">
+                                            <div class="spinner-border text-primary" role="status">
+                                                <span class="visually-hidden">Cargando...</span>
+                                            </div>
+                                            <p class="text-muted mt-3">Cargando facturas...</p>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <div class="modal fade" id="modalDetalleFactura" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title"><i class="bi bi-file-earmark-text"></i> Detalle de Factura</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="modalDetalleFacturaBody">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalAnularFactura" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title"><i class="bi bi-exclamation-triangle"></i> Anular Factura</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-warning">
+                        <strong>¡Atención!</strong> Esta acción devolverá el inventario y no se puede deshacer.
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Factura a Anular</label>
+                        <h4 class="text-danger" id="facturaNumeroAnular">-</h4>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Motivo de Anulación <span class="text-danger">*</span></label>
+                        <textarea class="form-control"
+                                  id="motivoAnulacion"
+                                  rows="3"
+                                  placeholder="Describe el motivo por el cual se anula esta factura..."
+                                  required></textarea>
+                        <small class="text-muted">Este motivo quedará registrado permanentemente</small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-danger" onclick="FacturasController.anularFactura()">
+                        <i class="bi bi-x-circle"></i> Anular Factura
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios@1.6.0/dist/axios.min.js"></script>
+
+    <script src="../../config/api.js"></script>
+    <script src="../../utils/storage.js"></script>
+    <script src="../../utils/loader.js"></script>
+    <script src="../../utils/alerts.js"></script>
+    <script src="../../utils/formatter.js"></script>
+    <script src="../../services/facturas.service.js"></script>
+    <script src="../../controllers/facturas.controller.js"></script>
+
+    <script>
+        async function loadComponents() {
+            try {
+                const navbarResponse = await fetch('../../components/navbar.html');
+                const navbarHTML = await navbarResponse.text();
+                document.getElementById('navbar-container').innerHTML = navbarHTML;
+
+                const sidebarResponse = await fetch('../../components/sidebar.html');
+                const sidebarHTML = await sidebarResponse.text();
+                document.getElementById('sidebar-container').innerHTML = sidebarHTML;
+
+                const sidebarScript = document.createElement('script');
+                sidebarScript.src = '../../utils/sidebar.js';
+                document.body.appendChild(sidebarScript);
+            } catch (error) {
+                console.error('Error al cargar componentes:', error);
+            }
+        }
+
+        loadComponents();
+    </script>
+
+</body>
+</html>
