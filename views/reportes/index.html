@@ -14,6 +14,13 @@
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
 
+    <!-- jsPDF y jsPDF AutoTable para exportar PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+
+    <!-- SheetJS para exportar Excel -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
     <!-- Estilos personalizados -->
     <link href="../../assets/css/style.css" rel="stylesheet">
 </head>
@@ -266,6 +273,410 @@
                                 <tbody id="tablaVentasDia">
                                 </tbody>
                             </table>
+                        </div>
+                    </div>
+                </div>
+
+                <hr class="my-5">
+
+                <!-- SECCIÓN DE REPORTES DETALLADOS -->
+                <div class="card">
+                    <div class="card-header bg-white">
+                        <h4 class="mb-0"><i class="bi bi-file-earmark-bar-graph me-2"></i>Reportes Detallados</h4>
+                    </div>
+                    <div class="card-body">
+                        <!-- Tabs de Navegación -->
+                        <ul class="nav nav-tabs mb-4" id="reportesTabs" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="tab-r1" data-bs-toggle="tab" data-bs-target="#reporte1" type="button">
+                                    <i class="bi bi-cash-stack"></i> R1: Ventas por Método
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="tab-r2" data-bs-toggle="tab" data-bs-target="#reporte2" type="button">
+                                    <i class="bi bi-trophy"></i> R2: Top Ingresos
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="tab-r3" data-bs-toggle="tab" data-bs-target="#reporte3" type="button">
+                                    <i class="bi bi-cart4"></i> R3: Top Cantidades
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="tab-r4" data-bs-toggle="tab" data-bs-target="#reporte4" type="button">
+                                    <i class="bi bi-boxes"></i> R4: Inventario General
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="tab-r5" data-bs-toggle="tab" data-bs-target="#reporte5" type="button">
+                                    <i class="bi bi-arrow-down-circle"></i> R5: Menos Ventas
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="tab-r6" data-bs-toggle="tab" data-bs-target="#reporte6" type="button">
+                                    <i class="bi bi-exclamation-triangle"></i> R6: Sin Stock
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="tab-r7" data-bs-toggle="tab" data-bs-target="#reporte7" type="button">
+                                    <i class="bi bi-search"></i> R7: Buscar Factura
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="tab-r8" data-bs-toggle="tab" data-bs-target="#reporte8" type="button">
+                                    <i class="bi bi-box-arrow-in-down"></i> R8: Ingresos Inventario
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="tab-r9" data-bs-toggle="tab" data-bs-target="#reporte9" type="button">
+                                    <i class="bi bi-dash-circle"></i> R9: Stock Mínimo
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="tab-r10" data-bs-toggle="tab" data-bs-target="#reporte10" type="button">
+                                    <i class="bi bi-shop"></i> R10: Por Tienda
+                                </button>
+                            </li>
+                        </ul>
+
+                        <!-- Contenido de los Tabs -->
+                        <div class="tab-content" id="reportesTabContent">
+
+                            <!-- REPORTE 1: Total Facturado por Método de Pago -->
+                            <div class="tab-pane fade show active" id="reporte1" role="tabpanel">
+                                <h5 class="mb-3">Informe de Ventas por Método de Pago</h5>
+                                <p class="text-muted">Muestra el total facturado entre dos fechas, desglosado por método de pago.</p>
+
+                                <div class="row mb-3">
+                                    <div class="col-md-3">
+                                        <label class="form-label fw-bold">Fecha Inicio</label>
+                                        <input type="date" class="form-control" id="r1FechaInicio">
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label fw-bold">Fecha Fin</label>
+                                        <input type="date" class="form-control" id="r1FechaFin">
+                                    </div>
+                                    <div class="col-md-3 d-flex align-items-end">
+                                        <button class="btn btn-primary me-2" onclick="ReportesController.generarReporte1()">
+                                            <i class="bi bi-search"></i> Generar
+                                        </button>
+                                        <button class="btn btn-success me-2" onclick="ReportesController.exportarReporte1('excel')">
+                                            <i class="bi bi-file-earmark-excel"></i> Excel
+                                        </button>
+                                        <button class="btn btn-danger" onclick="ReportesController.exportarReporte1('pdf')">
+                                            <i class="bi bi-file-earmark-pdf"></i> PDF
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div id="r1Resultados">
+                                    <div class="alert alert-info">
+                                        <i class="bi bi-info-circle me-2"></i>Seleccione un rango de fechas y presione "Generar"
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- REPORTE 2: Productos que Más Dinero Generan -->
+                            <div class="tab-pane fade" id="reporte2" role="tabpanel">
+                                <h5 class="mb-3">Productos que Más Dinero Generan</h5>
+                                <p class="text-muted">Muestra los productos ordenados por el total de ingresos generados entre dos fechas.</p>
+
+                                <div class="row mb-3">
+                                    <div class="col-md-3">
+                                        <label class="form-label fw-bold">Fecha Inicio</label>
+                                        <input type="date" class="form-control" id="r2FechaInicio">
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label fw-bold">Fecha Fin</label>
+                                        <input type="date" class="form-control" id="r2FechaFin">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label class="form-label fw-bold">Límite</label>
+                                        <input type="number" class="form-control" id="r2Limite" value="20" min="1">
+                                    </div>
+                                    <div class="col-md-4 d-flex align-items-end">
+                                        <button class="btn btn-primary me-2" onclick="ReportesController.generarReporte2()">
+                                            <i class="bi bi-search"></i> Generar
+                                        </button>
+                                        <button class="btn btn-success me-2" onclick="ReportesController.exportarReporte2('excel')">
+                                            <i class="bi bi-file-earmark-excel"></i> Excel
+                                        </button>
+                                        <button class="btn btn-danger" onclick="ReportesController.exportarReporte2('pdf')">
+                                            <i class="bi bi-file-earmark-pdf"></i> PDF
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div id="r2Resultados">
+                                    <div class="alert alert-info">
+                                        <i class="bi bi-info-circle me-2"></i>Seleccione un rango de fechas y presione "Generar"
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- REPORTE 3: Productos Más Vendidos (Cantidades) -->
+                            <div class="tab-pane fade" id="reporte3" role="tabpanel">
+                                <h5 class="mb-3">Productos Más Vendidos por Cantidad</h5>
+                                <p class="text-muted">Muestra los productos ordenados por la cantidad total vendida entre dos fechas.</p>
+
+                                <div class="row mb-3">
+                                    <div class="col-md-3">
+                                        <label class="form-label fw-bold">Fecha Inicio</label>
+                                        <input type="date" class="form-control" id="r3FechaInicio">
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label fw-bold">Fecha Fin</label>
+                                        <input type="date" class="form-control" id="r3FechaFin">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label class="form-label fw-bold">Límite</label>
+                                        <input type="number" class="form-control" id="r3Limite" value="20" min="1">
+                                    </div>
+                                    <div class="col-md-4 d-flex align-items-end">
+                                        <button class="btn btn-primary me-2" onclick="ReportesController.generarReporte3()">
+                                            <i class="bi bi-search"></i> Generar
+                                        </button>
+                                        <button class="btn btn-success me-2" onclick="ReportesController.exportarReporte3('excel')">
+                                            <i class="bi bi-file-earmark-excel"></i> Excel
+                                        </button>
+                                        <button class="btn btn-danger" onclick="ReportesController.exportarReporte3('pdf')">
+                                            <i class="bi bi-file-earmark-pdf"></i> PDF
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div id="r3Resultados">
+                                    <div class="alert alert-info">
+                                        <i class="bi bi-info-circle me-2"></i>Seleccione un rango de fechas y presione "Generar"
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- REPORTE 4: Inventario Actual General -->
+                            <div class="tab-pane fade" id="reporte4" role="tabpanel">
+                                <h5 class="mb-3">Inventario Actual General</h5>
+                                <p class="text-muted">Muestra el inventario completo actual de todos los productos.</p>
+
+                                <div class="row mb-3">
+                                    <div class="col-md-3">
+                                        <label class="form-label fw-bold">Categoría</label>
+                                        <select class="form-select" id="r4Categoria">
+                                            <option value="">Todas las categorías</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3 d-flex align-items-end">
+                                        <button class="btn btn-primary me-2" onclick="ReportesController.generarReporte4()">
+                                            <i class="bi bi-search"></i> Generar
+                                        </button>
+                                        <button class="btn btn-success me-2" onclick="ReportesController.exportarReporte4('excel')">
+                                            <i class="bi bi-file-earmark-excel"></i> Excel
+                                        </button>
+                                        <button class="btn btn-danger" onclick="ReportesController.exportarReporte4('pdf')">
+                                            <i class="bi bi-file-earmark-pdf"></i> PDF
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div id="r4Resultados">
+                                    <div class="alert alert-info">
+                                        <i class="bi bi-info-circle me-2"></i>Presione "Generar" para ver el inventario actual
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- REPORTE 5: Productos con Menos Ventas -->
+                            <div class="tab-pane fade" id="reporte5" role="tabpanel">
+                                <h5 class="mb-3">Productos con Menos Ventas</h5>
+                                <p class="text-muted">Muestra los productos con menor cantidad de ventas registradas.</p>
+
+                                <div class="row mb-3">
+                                    <div class="col-md-3">
+                                        <label class="form-label fw-bold">Fecha Inicio</label>
+                                        <input type="date" class="form-control" id="r5FechaInicio">
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label fw-bold">Fecha Fin</label>
+                                        <input type="date" class="form-control" id="r5FechaFin">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label class="form-label fw-bold">Límite</label>
+                                        <input type="number" class="form-control" id="r5Limite" value="20" min="1">
+                                    </div>
+                                    <div class="col-md-4 d-flex align-items-end">
+                                        <button class="btn btn-primary me-2" onclick="ReportesController.generarReporte5()">
+                                            <i class="bi bi-search"></i> Generar
+                                        </button>
+                                        <button class="btn btn-success me-2" onclick="ReportesController.exportarReporte5('excel')">
+                                            <i class="bi bi-file-earmark-excel"></i> Excel
+                                        </button>
+                                        <button class="btn btn-danger" onclick="ReportesController.exportarReporte5('pdf')">
+                                            <i class="bi bi-file-earmark-pdf"></i> PDF
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div id="r5Resultados">
+                                    <div class="alert alert-info">
+                                        <i class="bi bi-info-circle me-2"></i>Seleccione un rango de fechas y presione "Generar"
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- REPORTE 6: Productos Sin Stock -->
+                            <div class="tab-pane fade" id="reporte6" role="tabpanel">
+                                <h5 class="mb-3">Productos Sin Stock</h5>
+                                <p class="text-muted">Muestra los productos que no cuentan con existencias y necesitan ser adquiridos.</p>
+
+                                <div class="row mb-3">
+                                    <div class="col-md-3 d-flex align-items-end">
+                                        <button class="btn btn-primary me-2" onclick="ReportesController.generarReporte6()">
+                                            <i class="bi bi-search"></i> Generar
+                                        </button>
+                                        <button class="btn btn-success me-2" onclick="ReportesController.exportarReporte6('excel')">
+                                            <i class="bi bi-file-earmark-excel"></i> Excel
+                                        </button>
+                                        <button class="btn btn-danger" onclick="ReportesController.exportarReporte6('pdf')">
+                                            <i class="bi bi-file-earmark-pdf"></i> PDF
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div id="r6Resultados">
+                                    <div class="alert alert-info">
+                                        <i class="bi bi-info-circle me-2"></i>Presione "Generar" para ver los productos sin stock
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- REPORTE 7: Buscar Factura por Número -->
+                            <div class="tab-pane fade" id="reporte7" role="tabpanel">
+                                <h5 class="mb-3">Búsqueda de Factura</h5>
+                                <p class="text-muted">Buscar una factura por su número y ver su detalle completo.</p>
+
+                                <div class="row mb-3">
+                                    <div class="col-md-2">
+                                        <label class="form-label fw-bold">Serie</label>
+                                        <input type="text" class="form-control" id="r7Serie" placeholder="A" maxlength="10">
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label fw-bold">Número de Factura</label>
+                                        <input type="number" class="form-control" id="r7Numero" placeholder="123456">
+                                    </div>
+                                    <div class="col-md-3 d-flex align-items-end">
+                                        <button class="btn btn-primary me-2" onclick="ReportesController.generarReporte7()">
+                                            <i class="bi bi-search"></i> Buscar
+                                        </button>
+                                        <button class="btn btn-success" onclick="ReportesController.exportarReporte7('pdf')">
+                                            <i class="bi bi-printer"></i> Imprimir
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div id="r7Resultados">
+                                    <div class="alert alert-info">
+                                        <i class="bi bi-info-circle me-2"></i>Ingrese el número de factura y presione "Buscar"
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- REPORTE 8: Ingresos al Inventario -->
+                            <div class="tab-pane fade" id="reporte8" role="tabpanel">
+                                <h5 class="mb-3">Ingresos al Inventario</h5>
+                                <p class="text-muted">Muestra el historial de ingresos de productos al inventario (compras).</p>
+
+                                <div class="row mb-3">
+                                    <div class="col-md-3">
+                                        <label class="form-label fw-bold">Fecha Inicio</label>
+                                        <input type="date" class="form-control" id="r8FechaInicio">
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label fw-bold">Fecha Fin</label>
+                                        <input type="date" class="form-control" id="r8FechaFin">
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label fw-bold">Proveedor</label>
+                                        <select class="form-select" id="r8Proveedor">
+                                            <option value="">Todos los proveedores</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3 d-flex align-items-end">
+                                        <button class="btn btn-primary me-2" onclick="ReportesController.generarReporte8()">
+                                            <i class="bi bi-search"></i> Generar
+                                        </button>
+                                        <button class="btn btn-success me-2" onclick="ReportesController.exportarReporte8('excel')">
+                                            <i class="bi bi-file-earmark-excel"></i> Excel
+                                        </button>
+                                        <button class="btn btn-danger" onclick="ReportesController.exportarReporte8('pdf')">
+                                            <i class="bi bi-file-earmark-pdf"></i> PDF
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div id="r8Resultados">
+                                    <div class="alert alert-info">
+                                        <i class="bi bi-info-circle me-2"></i>Seleccione un rango de fechas y presione "Generar"
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- REPORTE 9: Productos con Stock Mínimo -->
+                            <div class="tab-pane fade" id="reporte9" role="tabpanel">
+                                <h5 class="mb-3">Productos con Stock Mínimo</h5>
+                                <p class="text-muted">Muestra los productos que tienen stock menor o igual al mínimo permitido.</p>
+
+                                <div class="row mb-3">
+                                    <div class="col-md-3 d-flex align-items-end">
+                                        <button class="btn btn-primary me-2" onclick="ReportesController.generarReporte9()">
+                                            <i class="bi bi-search"></i> Generar
+                                        </button>
+                                        <button class="btn btn-success me-2" onclick="ReportesController.exportarReporte9('excel')">
+                                            <i class="bi bi-file-earmark-excel"></i> Excel
+                                        </button>
+                                        <button class="btn btn-danger" onclick="ReportesController.exportarReporte9('pdf')">
+                                            <i class="bi bi-file-earmark-pdf"></i> PDF
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div id="r9Resultados">
+                                    <div class="alert alert-info">
+                                        <i class="bi bi-info-circle me-2"></i>Presione "Generar" para ver los productos con stock mínimo
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- REPORTE 10: Inventario por Tienda -->
+                            <div class="tab-pane fade" id="reporte10" role="tabpanel">
+                                <h5 class="mb-3">Inventario por Tienda</h5>
+                                <p class="text-muted">Muestra el inventario actual distribuido por tienda/sucursal.</p>
+
+                                <div class="row mb-3">
+                                    <div class="col-md-3">
+                                        <label class="form-label fw-bold">Tienda</label>
+                                        <select class="form-select" id="r10Tienda">
+                                            <option value="">Todas las tiendas</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3 d-flex align-items-end">
+                                        <button class="btn btn-primary me-2" onclick="ReportesController.generarReporte10()">
+                                            <i class="bi bi-search"></i> Generar
+                                        </button>
+                                        <button class="btn btn-success me-2" onclick="ReportesController.exportarReporte10('excel')">
+                                            <i class="bi bi-file-earmark-excel"></i> Excel
+                                        </button>
+                                        <button class="btn btn-danger" onclick="ReportesController.exportarReporte10('pdf')">
+                                            <i class="bi bi-file-earmark-pdf"></i> PDF
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div id="r10Resultados">
+                                    <div class="alert alert-info">
+                                        <i class="bi bi-info-circle me-2"></i>Presione "Generar" para ver el inventario por tienda
+                                    </div>
+                                </div>
+                            </div>
+
                         </div>
                     </div>
                 </div>
