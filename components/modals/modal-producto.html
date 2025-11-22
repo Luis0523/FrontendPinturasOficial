@@ -146,13 +146,41 @@
                                 <!-- Extensión m² -->
                                 <div class="col-md-12">
                                     <label class="form-label">Extensión (m² por galón)</label>
-                                    <input type="number" 
-                                           class="form-control" 
-                                           id="extension_m2" 
+                                    <input type="number"
+                                           class="form-control"
+                                           id="extension_m2"
                                            name="extension_m2"
                                            placeholder="Ej: 35"
                                            min="0"
                                            step="0.01">
+                                </div>
+
+                                <!-- Imagen del Producto -->
+                                <div class="col-md-12">
+                                    <label class="form-label">Imagen del Producto</label>
+                                    <input type="file"
+                                           class="form-control"
+                                           id="imagenProducto"
+                                           name="imagenProducto"
+                                           accept="image/jpeg,image/jpg,image/png,image/gif,image/webp"
+                                           onchange="ProductosController.handleImageChange(event)">
+                                    <small class="text-muted">Formatos: JPG, PNG, GIF, WEBP. Tamaño máximo: 5MB</small>
+
+                                    <!-- Preview de la imagen -->
+                                    <div id="imagenPreview" class="mt-3" style="display: none;">
+                                        <div class="position-relative d-inline-block">
+                                            <img id="imagenPreviewImg"
+                                                 src=""
+                                                 alt="Preview"
+                                                 class="img-thumbnail"
+                                                 style="max-width: 300px; max-height: 300px;">
+                                            <button type="button"
+                                                    class="btn btn-danger btn-sm position-absolute top-0 end-0 m-2"
+                                                    onclick="ProductosController.removeImage()">
+                                                <i class="bi bi-x"></i>
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -160,9 +188,9 @@
                         <!-- TAB 2: Presentaciones y Precios -->
                         <div class="tab-pane fade" id="tab-presentaciones">
                             <div class="mb-3">
-                                <button type="button" 
-                                        class="btn btn-sm btn-outline-primary" 
-                                        onclick="CatalogoController.addPresentacion()">
+                                <button type="button"
+                                        class="btn btn-sm btn-outline-primary"
+                                        onclick="ProductosController.addPresentacion()">
                                     <i class="bi bi-plus-circle me-1"></i>
                                     Agregar Presentación
                                 </button>
@@ -198,10 +226,10 @@
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                     <i class="bi bi-x-circle me-2"></i>Cancelar
                 </button>
-                <button type="button" 
-                        class="btn btn-primary" 
+                <button type="button"
+                        class="btn btn-primary"
                         id="btnGuardarProducto"
-                        onclick="CatalogoController.saveProducto()">
+                        onclick="ProductosController.saveProducto()">
                     <i class="bi bi-check-circle me-2"></i>Guardar
                 </button>
             </div>

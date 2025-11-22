@@ -185,11 +185,17 @@ const CatalogoController = {
             badgeText = 'Stock Bajo';
         }
 
+        // Imagen del producto
+        const imagenUrl = producto.imagen_url || 'https://via.placeholder.com/300x200?text=Sin+Imagen';
+
         col.innerHTML = `
             <div class="producto-card">
                 <div class="position-relative">
-                    <div class="producto-imagen d-flex align-items-center justify-content-center">
-                        <i class="bi bi-paint-bucket" style="font-size: 4rem; color: var(--rojo-principal); opacity: 0.3;"></i>
+                    <div class="producto-imagen" style="overflow: hidden; height: 200px; background: var(--blanco-suave);">
+                        <img src="${imagenUrl}"
+                             alt="${producto.descripcion || 'Producto'}"
+                             style="width: 100%; height: 100%; object-fit: cover;"
+                             onerror="this.src='https://via.placeholder.com/300x200?text=Sin+Imagen'">
                     </div>
                     <span class="producto-badge ${badgeClass}">${badgeText}</span>
                 </div>
@@ -207,13 +213,22 @@ const CatalogoController = {
                             <i class="bi bi-box-seam"></i> Stock: <strong>${item.existencia}</strong>
                         </small>
                     </div>
-                    <button
-                        class="btn btn-agregar"
-                        onclick="CatalogoController.verDetalleProducto(${item.producto_presentacion_id})"
-                        ${btnDisabled}
-                    >
-                        <i class="bi bi-eye"></i> Ver Detalles
-                    </button>
+                    <div class="d-flex gap-2">
+                        <button
+                            class="btn btn-outline-secondary flex-grow-1"
+                            onclick="CatalogoController.verDetalleProducto(${item.producto_presentacion_id})"
+                            ${btnDisabled}
+                        >
+                            <i class="bi bi-eye"></i> Ver
+                        </button>
+                        <button
+                            class="btn btn-agregar flex-grow-1"
+                            onclick="CatalogoController.agregarAlCarrito(${item.producto_presentacion_id})"
+                            ${btnDisabled}
+                        >
+                            <i class="bi bi-cart-plus"></i> Agregar
+                        </button>
+                    </div>
                 </div>
             </div>
         `;
@@ -394,6 +409,47 @@ const CatalogoController = {
         }
     },
 
+    // ==================== CARRITO ====================
+
+    /**
+     * Agregar producto al carrito
+     */
+    agregarAlCarrito(productoPresentacionId) {
+        try {
+            // Buscar el producto en el inventario
+            const itemInventario = this.estado.inventario.find(
+                i => i.producto_presentacion_id === productoPresentacionId
+            );
+
+            if (!itemInventario) {
+                this.mostrarError('Producto no encontrado');
+                return;
+            }
+
+            // Verificar si hay stock
+            if (itemInventario.existencia <= 0) {
+                this.mostrarNotificacion('No hay stock disponible', 'warning');
+                return;
+            }
+
+            // Agregar información de sucursal al producto
+            const productoConSucursal = {
+                ...itemInventario,
+                sucursal: this.estado.sucursalSeleccionada
+            };
+
+            // Usar el CarritoController para agregar al carrito
+            const agregado = CarritoController.agregarAlCarrito(productoConSucursal);
+
+            if (agregado) {
+                console.log('✅ Producto agregado al carrito');
+            }
+        } catch (error) {
+            console.error('Error al agregar al carrito:', error);
+            this.mostrarNotificacion('Error al agregar producto al carrito', 'danger');
+        }
+    },
+
     // ==================== EVENTOS ====================
 
     /**
@@ -469,7 +525,7 @@ const CatalogoController = {
      */
     mostrarExito(mensaje) {
         console.log('✅', mensaje);
-        // TODO: Implementar toast notification
+        this.mostrarNotificacion(mensaje, 'success');
     },
 
     /**
@@ -477,7 +533,36 @@ const CatalogoController = {
      */
     mostrarError(mensaje) {
         console.error('❌', mensaje);
-        alert(mensaje);
+        this.mostrarNotificacion(mensaje, 'danger');
+    },
+
+    /**
+     * Mostrar notificación toast
+     */
+    mostrarNotificacion(mensaje, tipo = 'info') {
+        const toastContainer = document.getElementById('toastContainer');
+        if (!toastContainer) {
+            console.log(`${tipo.toUpperCase()}: ${mensaje}`);
+            return;
+        }
+
+        const toast = document.createElement('div');
+        toast.className = `toast align-items-center text-white bg-${tipo} border-0`;
+        toast.setAttribute('role', 'alert');
+        toast.innerHTML = `
+            <div class="d-flex">
+                <div class="toast-body">${mensaje}</div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        `;
+
+        toastContainer.appendChild(toast);
+        const bsToast = new bootstrap.Toast(toast);
+        bsToast.show();
+
+        toast.addEventListener('hidden.bs.toast', () => {
+            toast.remove();
+        });
     }
 };
 

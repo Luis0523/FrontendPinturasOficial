@@ -19,6 +19,8 @@ const Permissions = {
      */
     hasRole(requiredRole) {
         const user = Storage.getUser();
+        console.log(user);
+        console.log('user role:', user ? user.rol : 'no user' );
         if (!user || !user.rol) return false;
         return user.rol === requiredRole;
     },

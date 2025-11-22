@@ -19,6 +19,8 @@ const ProductosController = {
     modalDetalle: null,
     isEditMode: false,
     sucursalSeleccionada: null,
+    selectedImageFile: null, // Archivo de imagen seleccionado
+    currentImageUrl: null, // URL de imagen actual (para edición)
 
 
     /**
@@ -143,6 +145,29 @@ const ProductosController = {
                 filterMarca.innerHTML += `<option value="${marca.id}">${marca.nombre}</option>`;
             });
         }*/
+    },
+
+    /**
+     * Llenar selects del formulario de crear/editar
+     */
+    fillFormSelects() {
+        // Categorías
+        const categoriaSelect = document.getElementById('categoria_id');
+        if (categoriaSelect) {
+            categoriaSelect.innerHTML = '<option value="">Seleccionar...</option>';
+            this.categorias.forEach(cat => {
+                categoriaSelect.innerHTML += `<option value="${cat.id}">${cat.nombre}</option>`;
+            });
+        }
+
+        // Marcas
+        const marcaSelect = document.getElementById('marca_id');
+        if (marcaSelect) {
+            marcaSelect.innerHTML = '<option value="">Seleccionar...</option>';
+            this.marcas.forEach(marca => {
+                marcaSelect.innerHTML += `<option value="${marca.id}">${marca.nombre}</option>`;
+            });
+        }
     },
 
     /**
@@ -534,16 +559,19 @@ const ProductosController = {
         this.isEditMode = false;
         this.currentProductoId = null;
         this.presentacionesSeleccionadas = [];
-        
+
         // Limpiar formulario
         this.resetForm();
-        
+
+        // Llenar selects
+        this.fillFormSelects();
+
         // Cambiar título
         document.getElementById('modalProductoTitleText').textContent = 'Nuevo Producto';
-        
+
         // Mostrar modal
         this.modalProducto.show();
-        
+
         // Ir al primer tab
         const firstTab = document.getElementById('tab-general-btn');
         if (firstTab) {
@@ -575,6 +603,9 @@ const ProductosController = {
             const presentacionesRes = await ProductosService.getPresentacionesDeProducto(id);
             this.presentacionesSeleccionadas = presentacionesRes.data || [];
 
+            // Llenar selects
+            this.fillFormSelects();
+
             // Llenar formulario
             document.getElementById('producto_id').value = producto.id;
             document.getElementById('sku').value = producto.codigo_sku || '';
@@ -586,6 +617,15 @@ const ProductosController = {
             document.getElementById('duracion_anios').value = producto.duracion_anios || '';
             document.getElementById('extension_m2').value = producto.extension_m2 || '';
             document.getElementById('estado').value = producto.activo ? 'ACTIVO' : 'INACTIVO';
+
+            // Cargar imagen existente
+            if (producto.imagen_url) {
+                this.currentImageUrl = producto.imagen_url;
+                const previewImg = document.getElementById('imagenPreviewImg');
+                const previewContainer = document.getElementById('imagenPreview');
+                previewImg.src = producto.imagen_url;
+                previewContainer.style.display = 'block';
+            }
 
             // Renderizar presentaciones
             this.renderPresentacionesTable();
@@ -638,6 +678,14 @@ const ProductosController = {
                 // ACTUALIZAR producto existente
                 const response = await ProductosService.updateProducto(this.currentProductoId, formData);
                 productoId = this.currentProductoId;
+
+                // Actualizar presentaciones si hay seleccionadas
+                if (this.presentacionesSeleccionadas.length > 0) {
+                    const presentacionesIds = this.presentacionesSeleccionadas.map(p => p.presentacion_id);
+                    console.log('Guardando presentaciones en modo EDICIÓN:', presentacionesIds);
+                    await ProductosService.agregarPresentacionesAProducto(productoId, presentacionesIds);
+                }
+
                 Alerts.success('Producto actualizado exitosamente');
             } else {
                 // CREAR nuevo producto
@@ -647,10 +695,22 @@ const ProductosController = {
                 // Si hay presentaciones seleccionadas, agregarlas
                 if (this.presentacionesSeleccionadas.length > 0) {
                     const presentacionesIds = this.presentacionesSeleccionadas.map(p => p.presentacion_id);
+                    console.log('Guardando presentaciones en modo CREACIÓN:', presentacionesIds);
+                    console.log('presentacionesSeleccionadas:', this.presentacionesSeleccionadas);
                     await ProductosService.agregarPresentacionesAProducto(productoId, presentacionesIds);
                 }
 
                 Alerts.success('Producto creado exitosamente');
+            }
+
+            // Si hay una imagen seleccionada, subirla
+            if (this.selectedImageFile) {
+                try {
+                    await ProductosService.uploadImagenProducto(productoId, this.selectedImageFile);
+                } catch (error) {
+                    console.error('Error subiendo imagen:', error);
+                    Alerts.warning('Producto guardado, pero hubo un error al subir la imagen');
+                }
             }
 
             Loader.hideInButton(btnGuardar);
@@ -761,6 +821,9 @@ const ProductosController = {
             presentacion: presentacion
         });
 
+        console.log('Presentación agregada:', { presentacion_id: presentacionId, presentacion });
+        console.log('Lista actualizada:', this.presentacionesSeleccionadas);
+
         // Re-renderizar tabla
         this.renderPresentacionesTable();
     },
@@ -786,22 +849,15 @@ const ProductosController = {
             noPresentaciones.style.display = 'none';
         }
 
-        tbody.innerHTML = this.presentacionesSeleccionadas.map((item, index) => `
+        tbody.innerHTML = this.presentacionesSeleccionadas.map((item, index) => {
+            console.log('Presentación seleccionada:', item);
+            return `
             <tr>
                 <td>${item.presentacion?.nombre || item.Presentacion?.nombre || '-'}</td>
                 <td>-</td>
                 <td>-</td>
-                <td>-</td>
-                <td class="text-center">
-                    <button type="button" 
-                            class="btn btn-sm btn-outline-danger" 
-                            onclick="ProductosController.removePresentacion(${index})"
-                            title="Eliminar">
-                        <i class="bi bi-trash"></i>
-                    </button>
-                </td>
-            </tr>
-        `).join('');
+            </tr>`;
+        }).join('');
     },
 
     /**
@@ -937,6 +993,57 @@ const ProductosController = {
     /**
      * Resetear formulario
      */
+    /**
+     * Manejar cambio de imagen
+     */
+    handleImageChange(event) {
+        const file = event.target.files[0];
+
+        if (!file) {
+            return;
+        }
+
+        // Validar tipo de archivo
+        const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+        if (!allowedTypes.includes(file.type)) {
+            Alerts.warning('Tipo de archivo no permitido. Solo se permiten imágenes (JPG, PNG, GIF, WEBP)');
+            event.target.value = '';
+            return;
+        }
+
+        // Validar tamaño (5MB)
+        const maxSize = 5 * 1024 * 1024;
+        if (file.size > maxSize) {
+            Alerts.warning('El archivo es demasiado grande. Tamaño máximo: 5MB');
+            event.target.value = '';
+            return;
+        }
+
+        // Guardar archivo seleccionado
+        this.selectedImageFile = file;
+
+        // Mostrar preview
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const previewImg = document.getElementById('imagenPreviewImg');
+            const previewContainer = document.getElementById('imagenPreview');
+
+            previewImg.src = e.target.result;
+            previewContainer.style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+    },
+
+    /**
+     * Eliminar imagen seleccionada
+     */
+    removeImage() {
+        this.selectedImageFile = null;
+        document.getElementById('imagenProducto').value = '';
+        document.getElementById('imagenPreview').style.display = 'none';
+        document.getElementById('imagenPreviewImg').src = '';
+    },
+
     resetForm() {
         const form = document.getElementById('formProducto');
         if (form) {
@@ -951,6 +1058,10 @@ const ProductosController = {
         // Limpiar presentaciones
         this.presentacionesSeleccionadas = [];
         this.renderPresentacionesTable();
+
+        // Limpiar imagen
+        this.removeImage();
+        this.currentImageUrl = null;
 
         // Resetear estado
         this.isEditMode = false;

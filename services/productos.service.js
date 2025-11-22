@@ -153,13 +153,44 @@ const ProductosService = {
     async getCatalogoVendible(filtros = {}) {
         try {
             const params = new URLSearchParams();
-            
+
             if (filtros.buscar) params.append('buscar', filtros.buscar);
             if (filtros.categoria_id) params.append('categoria_id', filtros.categoria_id);
             if (filtros.marca_id) params.append('marca_id', filtros.marca_id);
             if (filtros.activo !== undefined) params.append('activo', filtros.activo);
 
             const response = await axios.get(`/catalogo-vendible?${params.toString()}`);
+            return response.data;
+        } catch (error) {
+            throw this.handleError(error);
+        }
+    },
+
+    /**
+     * Subir imagen de producto
+     */
+    async uploadImagenProducto(productoId, file) {
+        try {
+            const formData = new FormData();
+            formData.append('imagen', file);
+
+            const response = await axios.post(`/productos/${productoId}/imagen`, formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
+            });
+            return response.data;
+        } catch (error) {
+            throw this.handleError(error);
+        }
+    },
+
+    /**
+     * Eliminar imagen de producto
+     */
+    async deleteImagenProducto(productoId) {
+        try {
+            const response = await axios.delete(`/productos/${productoId}/imagen`);
             return response.data;
         } catch (error) {
             throw this.handleError(error);

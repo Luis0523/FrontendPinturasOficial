@@ -39,6 +39,9 @@ const VentasController = {
         try {
             console.log('🚀 Inicializando POS...');
 
+            const user = Storage.getUser();
+            console.log(user);
+
             // Validar permisos de acceso
             if (!requirePermission(Permissions.canAccessPOS)) {
                 return; // El requirePermission ya redirige
@@ -219,7 +222,7 @@ const VentasController = {
      */
     crearCardProducto(item) {
         const col = document.createElement('div');
-        col.className = 'col-md-4 col-lg-3';
+        col.className = 'col-6 col-md-4 col-lg-3 col-xl-2 mb-3';
 
         const producto = item.productoPresentacion?.producto || {};
         const presentacion = item.productoPresentacion?.presentacion || {};
@@ -237,30 +240,39 @@ const VentasController = {
             badgeStock = '<span class="badge bg-success">Disponible</span>';
         }
 
+        // Imagen del producto
+        const imagenUrl = producto.imagen_url || 'https://via.placeholder.com/150x150?text=Sin+Imagen';
+
         col.innerHTML = `
             <div class="card h-100 shadow-sm producto-card">
-                <div class="card-body p-3">
-                    <div class="d-flex justify-content-between align-items-start mb-2">
-                        <small class="text-muted">${producto.codigo_sku || 'N/A'}</small>
+                <img src="${imagenUrl}"
+                     class="card-img-top"
+                     alt="${producto.descripcion || 'Producto'}"
+                     style="height: 120px; object-fit: cover;"
+                     onerror="this.src='https://via.placeholder.com/150x150?text=Sin+Imagen'">
+                <div class="card-body p-2">
+                    <div class="d-flex justify-content-between align-items-start mb-1">
+                        <small class="text-muted" style="font-size: 0.7rem;">${producto.codigo_sku || 'N/A'}</small>
                         ${badgeStock}
                     </div>
-                    <h6 class="card-title" style="font-size: 0.9rem; min-height: 40px;">
+                    <h6 class="card-title" style="font-size: 0.85rem; min-height: 35px; line-height: 1.2;">
                         ${producto.descripcion || 'Producto'}
                     </h6>
-                    <p class="card-text mb-2">
-                        <small class="text-muted">
+                    <p class="card-text mb-1">
+                        <small class="text-muted" style="font-size: 0.75rem;">
                             ${presentacion.nombre || 'N/A'}
                             ${producto.color ? `<br>Color: ${producto.color}` : ''}
                         </small>
                     </p>
                     <div class="d-flex justify-content-between align-items-center mb-2">
-                        <small class="text-muted">Stock: <strong>${item.existencia}</strong></small>
+                        <small class="text-muted" style="font-size: 0.75rem;">Stock: <strong>${item.existencia}</strong></small>
                     </div>
                     <div class="d-grid">
-                        <button 
-                            class="btn btn-primary btn-sm" 
+                        <button
+                            class="btn btn-primary btn-sm"
                             onclick="VentasController.agregarAlCarrito(${item.producto_presentacion_id})"
                             ${btnDisabled}
+                            style="font-size: 0.8rem; padding: 0.25rem 0.5rem;"
                         >
                             <i class="bi bi-plus-circle"></i> Agregar
                         </button>

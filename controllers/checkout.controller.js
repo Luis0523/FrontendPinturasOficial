@@ -97,14 +97,52 @@ const CheckoutController = {
         }
     },
 
+    /**
+     * Generar cotización PDF
+     */
+    generarCotizacion() {
+        try {
+            // Recopilar datos del formulario (opcional)
+            const datosCliente = {
+                nombre_cliente: document.getElementById('nombre_cliente')?.value.trim() || null,
+                telefono_cliente: document.getElementById('telefono_cliente')?.value.trim() || null,
+                email_cliente: document.getElementById('email_cliente')?.value.trim() || null,
+                nit_cliente: document.getElementById('nit_cliente')?.value.trim() || 'CF'
+            };
+
+            // Generar PDF usando el servicio
+            const resultado = CotizacionService.generarCotizacionPDF(
+                this.estado.carrito,
+                datosCliente
+            );
+
+            if (resultado.success) {
+                this.mostrarNotificacion(
+                    `Cotización ${resultado.numero} generada exitosamente`,
+                    'success'
+                );
+                console.log('✅ Cotización PDF generada:', resultado.nombreArchivo);
+            } else {
+                throw new Error(resultado.error || 'Error al generar cotización');
+            }
+
+        } catch (error) {
+            console.error('Error al generar cotización:', error);
+            this.mostrarNotificacion(
+                'Error al generar la cotización PDF',
+                'danger'
+            );
+        }
+    },
+
     async procesarPedido() {
         try {
-            
+
             if (!this.validarFormulario()) {
                 return;
             }
 
-            
+
             this.mostrarLoader();
             this.estado.procesando = true;
 
