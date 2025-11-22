@@ -414,7 +414,7 @@ const CatalogoController = {
     /**
      * Agregar producto al carrito
      */
-    agregarAlCarrito(productoPresentacionId) {
+    async agregarAlCarrito(productoPresentacionId) {
         try {
             // Buscar el producto en el inventario
             const itemInventario = this.estado.inventario.find(
@@ -432,10 +432,22 @@ const CatalogoController = {
                 return;
             }
 
-            // Agregar información de sucursal al producto
+            // Obtener el precio vigente del producto
+            const responsePrecio = await PreciosService.getPrecioVigente(
+                productoPresentacionId,
+                this.estado.sucursalSeleccionada.id
+            );
+
+            if (!responsePrecio.success || !responsePrecio.data) {
+                this.mostrarNotificacion('No se pudo obtener el precio del producto', 'warning');
+                return;
+            }
+
+            // Agregar información de sucursal y precios al producto
             const productoConSucursal = {
                 ...itemInventario,
-                sucursal: this.estado.sucursalSeleccionada
+                sucursal: this.estado.sucursalSeleccionada,
+                precios: [responsePrecio.data] // Agregar el precio en un array para que el CarritoController lo encuentre
             };
 
             // Usar el CarritoController para agregar al carrito

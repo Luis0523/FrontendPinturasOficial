@@ -342,16 +342,27 @@
                                 
                             </div>
                             
-                            <!-- Footer: Botón Facturar -->
-                            <div class="card-footer bg-white border-0 d-grid">
-                                <button 
-                                    type="button" 
-                                    class="btn btn-success btn-lg" 
-                                    id="btnFacturar"
-                                    disabled
-                                >
-                                    <i class="bi bi-receipt"></i> FACTURAR
-                                </button>
+                            <!-- Footer: Botones -->
+                            <div class="card-footer bg-white border-0">
+                                <div class="d-grid gap-2">
+                                    <button
+                                        type="button"
+                                        class="btn btn-primary"
+                                        id="btnGenerarCotizacion"
+                                        onclick="VentasController.generarCotizacion()"
+                                        style="display: none;"
+                                    >
+                                        <i class="bi bi-file-earmark-pdf"></i> Generar Cotización PDF
+                                    </button>
+                                    <button
+                                        type="button"
+                                        class="btn btn-success btn-lg"
+                                        id="btnFacturar"
+                                        disabled
+                                    >
+                                        <i class="bi bi-receipt"></i> FACTURAR
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -369,7 +380,11 @@
     <!-- Bootstrap 5 JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/axios@1.6.0/dist/axios.min.js"></script>
-    
+
+    <!-- jsPDF for PDF generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+
     <!-- Utilities -->
     <script src="../../utils/storage.js"></script>
     <script src="../../utils/alerts.js"></script>
@@ -392,7 +407,8 @@
     <script src="../../services/clientes.service.js"></script>
     <script src="../../services/ventas.service.js"></script>
     <script src="../../services/inventario.service.js"></script>
-    
+    <script src="../../services/cotizacion.service.js"></script>
+
     <!-- Controller -->
     <script src="../../controllers/ventas.controller.js"></script>
     

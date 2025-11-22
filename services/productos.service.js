@@ -197,6 +197,18 @@ const ProductosService = {
         }
     },
 
+    /**
+     * Obtener inventario completo de un producto (todas las presentaciones en todas las sucursales)
+     */
+    async getInventarioProducto(productoId) {
+        try {
+            const response = await axios.get(`/inventario/producto/${productoId}`);
+            return response.data;
+        } catch (error) {
+            throw this.handleError(error);
+        }
+    },
+
     handleError(error) {
         if (error.response) {
             return new Error(error.response.data.message || 'Error al procesar la solicitud');

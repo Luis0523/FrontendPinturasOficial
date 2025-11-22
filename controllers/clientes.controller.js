@@ -37,6 +37,9 @@ const ClientesController = {
             return;
         }
 
+        // Cargar modals
+        await this.loadModals();
+
         // Inicializar modals de Bootstrap
         const modalClienteElement = document.getElementById('modalCliente');
         const modalDetalleElement = document.getElementById('modalDetalleCliente');
@@ -53,6 +56,13 @@ const ClientesController = {
 
         // Cargar clientes
         await this.loadClientes();
+    },
+
+    /**
+     * Cargar modals
+     */
+    async loadModals() {
+        await loadComponent('modal-cliente-container', '/components/modals/modal-cliente.html');
     },
 
     /**

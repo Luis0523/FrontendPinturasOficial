@@ -6,6 +6,11 @@
 // URL base de la API (CAMBIAR SEGÚN TU BACKEND)
 const API_BASE_URL = 'http://localhost:5000/api';
 
+// Objeto de configuración global
+const API_CONFIG = {
+    baseURL: API_BASE_URL
+};
+
 // Configuración de Axios
 axios.defaults.baseURL = API_BASE_URL;
 axios.defaults.headers.common['Content-Type'] = 'application/json';

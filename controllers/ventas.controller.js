@@ -418,6 +418,7 @@ const VentasController = {
         const carritoVacio = document.getElementById('carritoVacio');
         const btnLimpiar = document.getElementById('btnLimpiarCarrito');
         const btnFacturar = document.getElementById('btnFacturar');
+        const btnCotizacion = document.getElementById('btnGenerarCotizacion');
 
         // Actualizar contador (con validación)
         if (carritoCount) {
@@ -435,6 +436,9 @@ const VentasController = {
             if (btnFacturar) {
                 btnFacturar.disabled = true;
             }
+            if (btnCotizacion) {
+                btnCotizacion.style.display = 'none';
+            }
             if (container) {
                 container.innerHTML = '';
             }
@@ -450,6 +454,9 @@ const VentasController = {
         }
         if (btnFacturar) {
             btnFacturar.disabled = false;
+        }
+        if (btnCotizacion) {
+            btnCotizacion.style.display = 'block';
         }
 
         // Renderizar items (con validación del container)
@@ -1054,9 +1061,9 @@ const VentasController = {
             this.abrirModalNuevoCliente();
         });
 
-        //document.getElementById('btnGuardarCliente').addEventListener('click', () => {
-        // this.guardarNuevoCliente();
-        //});
+        document.getElementById('btnGuardarCliente').addEventListener('click', () => {
+            this.guardarNuevoCliente();
+        });
 
         // Métodos de pago
         document.getElementById('selectMetodoPago').addEventListener('change', (e) => {
@@ -1168,6 +1175,74 @@ const VentasController = {
     mostrarError(mensaje) {
         console.error('❌', mensaje);
         alert(mensaje); // Por ahora usar alert, luego mejorar con toast
+    },
+
+    // ==================== COTIZACIÓN ====================
+
+    /**
+     * Generar cotización PDF desde el carrito actual
+     */
+    generarCotizacion() {
+        try {
+            // Verificar que hay productos en el carrito
+            if (this.estado.carrito.length === 0) {
+                this.mostrarError('El carrito está vacío. Agrega productos para generar la cotización.');
+                return;
+            }
+
+            // Calcular totales
+            const subtotal = this.estado.carrito.reduce((sum, item) => sum + item.subtotal, 0);
+            const descuento_total = this.estado.carrito.reduce((sum, item) => {
+                return sum + (item.subtotal * (item.descuento_pct || 0) / 100);
+            }, 0);
+            const total = subtotal - descuento_total;
+            const cantidad_items = this.estado.carrito.length;
+
+            // Formatear datos del carrito para el servicio de cotización
+            const datosCarrito = {
+                items: this.estado.carrito.map(item => ({
+                    producto_presentacion_id: item.producto_presentacion_id,
+                    codigo_sku: item.codigo_sku || 'N/A',
+                    nombre_completo: item.nombre_completo || 'Producto',
+                    cantidad: item.cantidad,
+                    precio_unitario: item.precio_unitario,
+                    subtotal: item.subtotal,
+                    descuento_pct: item.descuento_pct || 0
+                })),
+                totales: {
+                    subtotal: subtotal,
+                    descuento_total: descuento_total,
+                    total: total,
+                    cantidad_items: cantidad_items
+                },
+                sucursal: this.estado.sucursalSeleccionada
+            };
+
+            // Datos del cliente
+            const datosCliente = {
+                nombre_cliente: this.estado.clienteActivo?.nombre || 'CONSUMIDOR FINAL',
+                telefono_cliente: this.estado.clienteActivo?.telefono || null,
+                email_cliente: this.estado.clienteActivo?.email || null,
+                nit_cliente: this.estado.clienteActivo?.nit || 'CF'
+            };
+
+            // Generar PDF usando el servicio
+            const resultado = CotizacionService.generarCotizacionPDF(
+                datosCarrito,
+                datosCliente
+            );
+
+            if (resultado.success) {
+                this.mostrarExito(`Cotización ${resultado.numero} generada exitosamente`);
+                console.log('✅ Cotización PDF generada:', resultado.nombreArchivo);
+            } else {
+                throw new Error(resultado.error || 'Error al generar cotización');
+            }
+
+        } catch (error) {
+            console.error('Error al generar cotización:', error);
+            this.mostrarError('Error al generar la cotización PDF: ' + error.message);
+        }
     }
 };
 

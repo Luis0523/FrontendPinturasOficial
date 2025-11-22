@@ -42,6 +42,9 @@ const ProveedoresController = {
             return; // El requirePermission ya redirige
         }
 
+        // Cargar modals
+        await this.loadModals();
+
         // Inicializar modals de Bootstrap
         const modalProveedorElement = document.getElementById('modalProveedor');
         const modalDetalleElement = document.getElementById('modalDetalleProveedor');
@@ -58,6 +61,13 @@ const ProveedoresController = {
 
         // Cargar proveedores
         await this.loadProveedores();
+    },
+
+    /**
+     * Cargar modals
+     */
+    async loadModals() {
+        await loadComponent('modal-proveedor-container', '/components/modals/modal-proveedor.html');
     },
 
     /**

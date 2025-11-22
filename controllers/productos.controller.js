@@ -406,30 +406,45 @@ const ProductosController = {
             document.getElementById('detalle_duracion').textContent = producto.duracion_anios ? `${producto.duracion_anios} años` : '-';
             document.getElementById('detalle_extension').textContent = producto.extension_m2 ? `${producto.extension_m2} m²` : '-';
 
-            // Renderizar presentaciones
+            // Agrupar inventario por presentación para la primera tabla
+            const inventarioPorPresentacion = this.agruparInventarioPorPresentacion(inventario, presentaciones);
+
+            // Renderizar tabla de presentaciones con resumen de inventario
             const tbodyPresentaciones = document.getElementById('detalle_presentaciones');
             if (tbodyPresentaciones) {
-                if (presentaciones.length === 0) {
+                if (inventarioPorPresentacion.length === 0) {
                     tbodyPresentaciones.innerHTML = `
                         <tr>
                             <td colspan="4" class="text-center text-muted py-3">
-                                <i class="bi bi-inbox"></i> No hay presentaciones agregadas
+                                <i class="bi bi-inbox"></i> No hay presentaciones con inventario
                             </td>
                         </tr>
                     `;
                 } else {
-                    tbodyPresentaciones.innerHTML = presentaciones.map(p => `
-                        <tr>
-                            <td>${p.presentacion?.nombre || p.Presentacion?.nombre || '-'}</td>
-                            <td class="text-center">-</td>
-                            <td class="text-center">-</td>
-                            <td class="text-center">-</td>
-                        </tr>
-                    `).join('');
+                    tbodyPresentaciones.innerHTML = inventarioPorPresentacion.map(item => {
+                        const precioVenta = item.precio_venta ? `$${parseFloat(item.precio_venta).toFixed(2)}` : '-';
+                        const stockTotal = item.stock_total || 0;
+                        const stockMinimo = item.stock_minimo_total || 0;
+
+                        return `
+                            <tr>
+                                <td><strong>${item.nombre_presentacion}</strong></td>
+                                <td class="text-center">${precioVenta}</td>
+                                <td class="text-center">
+                                    ${this.getStockBadge(stockTotal, stockMinimo)}
+                                </td>
+                                <td class="text-center">
+                                    <span class="badge ${item.estado === 'OK' ? 'bg-success' : item.estado === 'BAJO' ? 'bg-warning text-dark' : 'bg-danger'}">
+                                        ${item.estado}
+                                    </span>
+                                </td>
+                            </tr>
+                        `;
+                    }).join('');
                 }
             }
 
-            // Renderizar inventario por sucursal (NUEVO)
+            // Renderizar inventario por sucursal (TABLA DETALLADA)
             const tbodyInventario = document.getElementById('detalle_inventario');
             if (tbodyInventario) {
                 if (inventario.length === 0) {
@@ -447,7 +462,7 @@ const ProductosController = {
                                 <i class="bi bi-building"></i>
                                 <strong>${inv.sucursal?.nombre || '-'}</strong>
                             </td>
-                            <td>${inv.presentacion?.nombre || '-'}</td>
+                            <td>${inv.productoPresentacion?.presentacion?.nombre || '-'}</td>
                             <td class="text-center">
                                 ${this.getStockBadge(inv.existencia, inv.stock_minimo)}
                             </td>
@@ -458,8 +473,8 @@ const ProductosController = {
                                 <span class="badge bg-secondary">${inv.stock_maximo || 0}</span>
                             </td>
                             <td class="text-center">
-                                <span class="text-muted small">
-                                    ${inv.ultima_actualizacion ? Formatter.formatDate(inv.ultima_actualizacion) : '-'}
+                                <span class="badge ${inv.estado === 'OK' ? 'bg-success' : inv.estado === 'BAJO' ? 'bg-warning text-dark' : 'bg-danger'}">
+                                    ${inv.estado}
                                 </span>
                             </td>
                         </tr>
@@ -480,6 +495,51 @@ const ProductosController = {
             console.error('Error cargando detalle:', error);
             Alerts.error('Error al cargar el detalle del producto');
         }
+    },
+
+    /**
+     * Agrupar inventario por presentación para la tabla de resumen
+     */
+    agruparInventarioPorPresentacion(inventario, presentaciones) {
+        const agrupado = {};
+
+        // Procesar inventario
+        inventario.forEach(inv => {
+            const presentacionId = inv.productoPresentacion?.presentacion_id;
+            const nombrePresentacion = inv.productoPresentacion?.presentacion?.nombre || 'Sin nombre';
+
+            if (!agrupado[presentacionId]) {
+                agrupado[presentacionId] = {
+                    nombre_presentacion: nombrePresentacion,
+                    stock_total: 0,
+                    stock_minimo_total: 0,
+                    precio_venta: null,
+                    estado: 'OK'
+                };
+            }
+
+            agrupado[presentacionId].stock_total += inv.existencia || 0;
+            agrupado[presentacionId].stock_minimo_total += inv.stock_minimo || 0;
+
+            // Tomar el primer precio encontrado (se puede mejorar para promedios)
+            if (!agrupado[presentacionId].precio_venta && inv.productoPresentacion?.precios?.length > 0) {
+                agrupado[presentacionId].precio_venta = inv.productoPresentacion.precios[0].precio_venta;
+            }
+        });
+
+        // Calcular estado general por presentación
+        Object.keys(agrupado).forEach(key => {
+            const item = agrupado[key];
+            if (item.stock_total === 0) {
+                item.estado = 'AGOTADO';
+            } else if (item.stock_total < item.stock_minimo_total) {
+                item.estado = 'BAJO';
+            } else {
+                item.estado = 'OK';
+            }
+        });
+
+        return Object.values(agrupado);
     },
     
 
@@ -866,85 +926,6 @@ const ProductosController = {
     removePresentacion(index) {
         this.presentacionesSeleccionadas.splice(index, 1);
         this.renderPresentacionesTable();
-    },
-
-    /**
-     * Ver detalle del producto
-     */
-    async viewDetalle(id) {
-        try {
-            Loader.show('Cargando detalle...');
-
-            // Obtener producto
-            const response = await ProductosService.getProductoById(id);
-            const producto = response.data;
-
-            // Obtener presentaciones
-            const presentacionesRes = await ProductosService.getPresentacionesDeProducto(id);
-            const presentaciones = presentacionesRes.data || [];
-
-            // Llenar modal de detalle
-            document.getElementById('detalle_sku').textContent = producto.codigo_sku || '-';
-            document.getElementById('detalle_descripcion').textContent = producto.descripcion || '-';
-            document.getElementById('detalle_categoria').textContent = producto.categoria?.nombre || '-';
-            document.getElementById('detalle_marca').textContent = producto.marca?.nombre || '-';
-            document.getElementById('detalle_color').textContent = producto.color || '-';
-            document.getElementById('detalle_estado').innerHTML = `
-                <span class="badge ${producto.activo ? 'bg-success' : 'bg-secondary'}">
-                    ${producto.activo ? 'ACTIVO' : 'INACTIVO'}
-                </span>
-            `;
-            document.getElementById('detalle_duracion').textContent = producto.duracion_anios ? `${producto.duracion_anios} años` : '-';
-            document.getElementById('detalle_extension').textContent = producto.extension_m2 ? `${producto.extension_m2} m²` : '-';
-
-            // Renderizar presentaciones
-            const tbodyPresentaciones = document.getElementById('detalle_presentaciones');
-            if (tbodyPresentaciones) {
-                if (presentaciones.length === 0) {
-                    tbodyPresentaciones.innerHTML = `
-                        <tr>
-                            <td colspan="4" class="text-center text-muted">
-                                No hay presentaciones agregadas
-                            </td>
-                        </tr>
-                    `;
-                } else {
-                    tbodyPresentaciones.innerHTML = presentaciones.map(p => `
-                        <tr>
-                            <td>${p.presentacion?.nombre || p.Presentacion?.nombre || '-'}</td>
-                            <td>-</td>
-                            <td>-</td>
-                            <td>-</td>
-                        </tr>
-                    `).join('');
-                }
-            }
-
-            // Renderizar inventario (por ahora vacío)
-            const tbodyInventario = document.getElementById('detalle_inventario');
-            if (tbodyInventario) {
-                tbodyInventario.innerHTML = `
-                    <tr>
-                        <td colspan="6" class="text-center text-muted">
-                            No hay información de inventario disponible
-                        </td>
-                    </tr>
-                `;
-            }
-
-            // Guardar ID para el botón de editar
-            this.currentProductoId = id;
-
-            Loader.hide();
-
-            // Mostrar modal
-            this.modalDetalle.show();
-
-        } catch (error) {
-            Loader.hide();
-            console.error('Error cargando detalle:', error);
-            Alerts.error('Error al cargar el detalle del producto');
-        }
     },
 
     /**
