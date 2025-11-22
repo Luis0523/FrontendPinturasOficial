@@ -1248,14 +1248,8 @@ const VentasController = {
 
 // ==================== INICIALIZACIÓN ====================
 
-// Inicializar cuando el DOM esté listo
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => {
-        VentasController.init();
-    });
-} else {
-    VentasController.init();
-}
+// NO inicializar automáticamente aquí, se llamará desde pos.html
+// después de que todos los componentes se hayan cargado
 
 // Hacer disponible globalmente
 window.VentasController = VentasController;

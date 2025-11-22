@@ -414,26 +414,23 @@
     
     <!-- Cargar componentes -->
     <script>
-        // Cargar Navbar
-        fetch('../../components/navbar.html')
-            .then(response => response.text())
-            .then(html => {
-                document.getElementById('navbar-container').innerHTML = html;
-            });
-        
-        // Cargar Sidebar
-        fetch('../../components/sidebar.html')
-            .then(response => response.text())
-            .then(html => {
-                document.getElementById('sidebar-container').innerHTML = html;
-            });
-        
-        // Cargar Modales
+        // Cargar todos los componentes antes de inicializar el POS
         Promise.all([
+            fetch('../../components/navbar.html').then(r => r.text()),
+            fetch('../../components/sidebar.html').then(r => r.text()),
             fetch('../../components/modals/modal-cliente-rapido.html').then(r => r.text()),
             fetch('../../components/modals/modal-factura-exitosa.html').then(r => r.text())
-        ]).then(([modalCliente, modalFactura]) => {
+        ]).then(([navbar, sidebar, modalCliente, modalFactura]) => {
+            // Insertar todos los componentes
+            document.getElementById('navbar-container').innerHTML = navbar;
+            document.getElementById('sidebar-container').innerHTML = sidebar;
             document.getElementById('modals-container').innerHTML = modalCliente + modalFactura;
+
+            // Ahora que todos los componentes están cargados, inicializar el POS
+            VentasController.init();
+        }).catch(error => {
+            console.error('Error al cargar componentes:', error);
+            alert('Error al cargar los componentes de la página. Por favor, recarga la página.');
         });
     </script>
     
